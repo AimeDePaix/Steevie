@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Steevie — pronostics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================================================
+   Steevie — feuille de style
+   Direction : le mètre de couturière. Tout le monde devine des mesures,
+   donc la page est bâtie autour d'un ruban gradué partagé où chaque
+   pronostic vient se poser comme un repère.
+   =========================================================================== */
+
+:root {
+  --paper:    #E9EEE7;
+  --card:     #FCFDFB;
+  --ink:      #17251F;
+  --ink-soft: #5F6E66;
+  --rule:     #CBD5C7;
+  --fille:    #A8497A;
+  --garcon:   #2E7D74;
+  --accent:   #D9A31E;
+
+  --display: "Fraunces", Georgia, serif;
+  --body:    "Karla", system-ui, sans-serif;
+  --mono:    "DM Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 20px 80px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 620px; margin: 0 auto; }
+
+/* --- en-tête ------------------------------------------------------------ */
+
+header { padding: 56px 0 40px; text-align: center; }
+
+.eyebrow {
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+h1 {
+  margin: 14px 0 6px;
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 60, "WONK" 1, "opsz" 100;
+  font-weight: 600;
+  font-size: clamp(52px, 15vw, 84px);
+  line-height: .95;
+  letter-spacing: -.02em;
+}
+
+.terme { font: 400 15px/1.4 var(--mono); color: var(--ink-soft); }
+
+/* --- blocs -------------------------------------------------------------- */
+
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 28px 24px;
+  margin-bottom: 22px;
+}
+
+h2 {
+  margin: 0 0 4px;
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 40, "opsz" 20;
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: -.01em;
+}
+
+.sub { margin: 0 0 24px; color: var(--ink-soft); font-size: 15px; }
+
+.hidden { display: none !important; }
+
+/* --- formulaire --------------------------------------------------------- */
+
+.field { margin-bottom: 26px; }
+
+label.q {
+  display: block;
+  margin-bottom: 10px;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.pills { display: flex; gap: 10px; }
+
+.pill {
+  flex: 1;
+  padding: 14px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: transparent;
+  font: 500 17px/1 var(--body);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.pill:hover { border-color: var(--ink-soft); }
+.pill[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+#pill-F[aria-pressed="true"] { background: var(--fille); border-color: var(--fille); }
+#pill-M[aria-pressed="true"] { background: var(--garcon); border-color: var(--garcon); }
+
+.readout {
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 50, "opsz" 60;
+  font-weight: 500;
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.readout small { font: 400 15px/1 var(--mono); color: var(--ink-soft); margin-left: 4px; }
+
+input[type=range] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+input[type=date], input[type=email], select {
+  width: 100%;
+  padding: 13px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--card);
+  font: 400 17px/1 var(--body);
+  color: var(--ink);
+}
+
+.cta {
+  width: 100%;
+  padding: 17px;
+  border: none;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--card);
+  font: 700 17px/1 var(--body);
+  cursor: pointer;
+}
+.cta:hover { background: #223730; }
+.cta:disabled { opacity: .5; cursor: default; }
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: 400 15px/1.4 var(--body);
+  color: var(--ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.note { margin-top: 16px; font-size: 14px; color: var(--ink-soft); }
+.error { color: #A33; font-size: 15px; margin-top: 12px; }
+
+/* --- le ruban gradué : l'élément signature ------------------------------ */
+
+.tape { margin: 0 0 34px; }
+
+.tape-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+
+.tape-rail {
+  position: relative;
+  height: 26px;
+  border-bottom: 1px solid var(--ink);
+}
+.tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  background: var(--rule);
+  height: 7px;
+}
+.tick.major { height: 14px; background: var(--ink-soft); }
+.tick-label {
+  position: absolute;
+  bottom: 16px;
+  transform: translateX(-50%);
+  font: 400 11px/1 var(--mono);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.tape-marks { position: relative; margin-top: 6px; }
+
+.mark {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.mark i {
+  display: block;
+  width: 2px;
+  height: 8px;
+  background: currentColor;
+}
+.mark b {
+  font: 500 11px/1 var(--mono);
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--card);
+  padding: 0 2px;
+}
+.mark.f { color: var(--fille); }
+.mark.m { color: var(--garcon); }
+.mark.moi b { background: var(--accent); color: var(--ink); border-radius: 2px; }
+
+/* --- barre sexe --------------------------------------------------------- */
+
+.split { display: flex; height: 44px; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.split div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font: 500 14px/1 var(--mono);
+  transition: flex-grow .4s ease;
+}
+.split .f { background: var(--fille); }
+.split .m { background: var(--garcon); }
+
+/* --- tableau ------------------------------------------------------------ */
+
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--ink);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+td { padding: 11px 6px; border-bottom: 1px solid var(--rule); }
+td.num { font-family: var(--mono); font-size: 14px; }
+tr.moi td { background: #FBF2D8; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: baseline; }
+.dot.f { background: var(--fille); }
+.dot.m { background: var(--garcon); }
+
+footer {
+  text-align: center;
+  padding: 30px 0;
+  font: 400 13px/1.6 var(--mono);
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Pronostics</p>
+    <h1>Steevie</h1>
+    <p class="terme" id="terme"></p>
+  </header>
+
+  <!-- chargement -->
+  <section id="s-load">
+    <p class="sub" style="margin:0">Un instant…</p>
+  </section>
+
+  <!-- lien absent ou invalide -->
+  <section id="s-lost" class="hidden">
+    <h2>Il te faut ton lien</h2>
+    <p class="sub">Chaque invité a son lien personnel, reçu par mail. Entre ton
+      adresse et il repart tout de suite.</p>
+    <div class="field">
+      <label class="q" for="email">Ton adresse mail</label>
+      <input type="email" id="email" placeholder="prenom@exemple.fr" autocomplete="email">
+    </div>
+    <button class="cta" id="btn-resend">Renvoyer mon lien</button>
+    <p class="note" id="resend-msg"></p>
+  </section>
+
+  <!-- formulaire -->
+  <section id="s-form" class="hidden">
+    <h2 id="hello"></h2>
+    <p class="sub">Cinq questions. Tu peux revenir modifier tes réponses tant
+      que Steevie n'est pas arrivé.
+      <button class="link" id="not-me">Ce n'est pas toi ?</button>
+    </p>
+
+    <div class="field">
+      <label class="q">Fille ou garçon</label>
+      <div class="pills">
+        <button type="button" class="pill" id="pill-F" aria-pressed="false">Une fille</button>
+        <button type="button" class="pill" id="pill-M" aria-pressed="false">Un garçon</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q" for="poids">Le poids</label>
+      <div class="readout"><span id="poids-out">3,35</span><small>kg</small></div>
+      <input type="range" id="poids" min="2000" max="5200" step="10" value="3350">
+    </div>
+
+    <div class="field">
+      <label class="q" for="taille">La taille</label>
+      <div class="readout"><span id="taille-out">50</span><small>cm</small></div>
+      <input type="range" id="taille" min="40" max="60" step="1" value="50">
+    </div>
+
+    <div class="field">
+      <label class="q" for="date">Le jour de la naissance</label>
+      <input type="date" id="date">
+    </div>
+
+    <div class="field">
+      <label class="q" for="initiale">La première lettre du prénom</label>
+      <select id="initiale"><option value="">Choisir une lettre</option></select>
+    </div>
+
+    <button class="cta" id="btn-save">Enregistrer mon pronostic</button>
+    <p class="error hidden" id="form-err"></p>
+    <p class="note" id="form-ok"></p>
+  </section>
+
+  <!-- résultat réel -->
+  <section id="s-result" class="hidden">
+    <h2 id="result-title"></h2>
+    <p class="sub" id="result-line"></p>
+  </section>
+
+  <!-- tableau collectif -->
+  <section id="s-board" class="hidden">
+    <h2>Ce que dit la famille</h2>
+    <p class="sub" id="board-sub"></p>
+
+    <div class="tape">
+      <div class="tape-head"><span>Fille ou garçon</span><span id="sexe-count"></span></div>
+      <div class="split"><div class="f" id="bar-f"></div><div class="m" id="bar-m"></div></div>
+    </div>
+
+    <div class="tape">
+      <div class="tape-head"><span>Poids</span><span>en kilos</span></div>
+      <div class="tape-rail" id="rail-poids"></div>
+      <div class="tape-marks" id="marks-poids"></div>
+    </div>
+
+    <div class="tape">
+      <div class="tape-head"><span>Taille</span><span>en centimètres</span></div>
+      <div class="tape-rail" id="rail-taille"></div>
+      <div class="tape-marks" id="marks-taille"></div>
+    </div>
+
+    <table>
+      <thead><tr id="board-head"></tr></thead>
+      <tbody id="board-body"></tbody>
+    </table>
+  </section>
+
+  <footer>Une page privée pour Steevie</footer>
+</div>
+
+<script>
+/* ===========================================================================
+   Configuration
+   =========================================================================== */
+
+const API = 'https://script.google.com/macros/s/AKfycbyBXnXpeNue6dRV0qfl2egpbkUmIYx3z-52B_bfSv-XsfOOH-JZ6vXlzE93I8ehTBRufA/exec';
+
+/* ===========================================================================
+   État
+   =========================================================================== */
+
+const token = new URLSearchParams(location.search).get('t') || '';
+let sexe = null;
+let monNom = null;
+let phase = 'open';
+
+const $ = id => document.getElementById(id);
+const show = (id, on) => $(id).classList.toggle('hidden', !on);
+
+/* ===========================================================================
+   Démarrage
+   =========================================================================== */
+
+remplirLettres();
+
+if (!token) {
+  show('s-load', false);
+  show('s-lost', true);
+} else {
+  fetch(API + '?action=me&t=' + encodeURIComponent(token))
+    .then(r => r.json())
+    .then(d => {
+      show('s-load', false);
+      if (!d.ok) { show('s-lost', true); return; }
+
+      monNom = d.nom;
+      phase = d.phase;
+      $('terme').textContent = 'Terme prévu le ' + jolieDate(d.terme);
+      $('hello').textContent = 'Bonjour ' + d.nom;
+      $('date').value = d.terme;
+
+      if (d.prono) {
+        choisirSexe(d.prono.sexe);
+        $('poids').value = d.prono.poids;
+        $('taille').value = d.prono.taille;
+        $('date').value = d.prono.date;
+        $('initiale').value = d.prono.initiale;
+        $('form-ok').textContent = 'Ton pronostic est enregistré. Tu peux le modifier.';
+      }
+      majReadouts();
+
+      if (phase === 'open') {
+        show('s-form', true);
+      }
+      chargerBoard();
+    })
+    .catch(() => {
+      show('s-load', false);
+      show('s-lost', true);
+    });
+}
+
+/* ===========================================================================
+   Formulaire
+   =========================================================================== */
+
+$('pill-F').onclick = () => choisirSexe('F');
+$('pill-M').onclick = () => choisirSexe('M');
+
+function choisirSexe(v) {
+  sexe = v;
+  $('pill-F').setAttribute('aria-pressed', v === 'F');
+  $('pill-M').setAttribute('aria-pressed', v === 'M');
+}
+
+$('poids').oninput = majReadouts;
+$('taille').oninput = majReadouts;
+
+function majReadouts() {
+  $('poids-out').textContent = (Number($('poids').value) / 1000).toFixed(2).replace('.', ',');
+  $('taille-out').textContent = $('taille').value;
+}
+
+$('not-me').onclick = () => { show('s-form', false); show('s-lost', true); };
+
+$('btn-save').onclick = () => {
+  const err = m => { $('form-err').textContent = m; show('form-err', true); };
+  show('form-err', false);
+
+  if (!sexe)               return err('Choisis fille ou garçon.');
+  if (!$('date').value)    return err('Indique un jour de naissance.');
+  if (!$('initiale').value) return err('Choisis une première lettre.');
+
+  $('btn-save').disabled = true;
+  $('btn-save').textContent = 'Enregistrement…';
+
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // évite le préflight CORS
+    body: JSON.stringify({
+      token: token,
+      sexe: sexe,
+      poids: Number($('poids').value),
+      taille: Number($('taille').value),
+      date: $('date').value,
+      initiale: $('initiale').value,
+    }),
+  })
+    .then(r => r.json())
+    .then(d => {
+      $('btn-save').disabled = false;
+      $('btn-save').textContent = 'Enregistrer mon pronostic';
+      if (!d.ok) return err(d.error || 'Enregistrement impossible.');
+      $('form-ok').textContent = 'C\'est noté. Merci !';
+      chargerBoard();
+    })
+    .catch(() => {
+      $('btn-save').disabled = false;
+      $('btn-save').textContent = 'Enregistrer mon pronostic';
+      err('Connexion impossible. Réessaie dans un instant.');
+    });
+};
+
+/* ===========================================================================
+   Renvoi du lien
+   =========================================================================== */
+
+$('btn-resend').onclick = () => {
+  const mail = $('email').value.trim();
+  if (!mail) { $('resend-msg').textContent = 'Entre ton adresse mail.'; return; }
+
+  $('btn-resend').disabled = true;
+  fetch(API + '?action=resend&email=' + encodeURIComponent(mail))
+    .then(r => r.json())
+    .then(() => {
+      $('resend-msg').textContent =
+        'Si cette adresse est sur la liste, le lien vient de partir. Pense au dossier spam.';
+    })
+    .catch(() => { $('resend-msg').textContent = 'Connexion impossible. Réessaie.'; })
+    .finally(() => { $('btn-resend').disabled = false; });
+};
+
+/* ===========================================================================
+   Le tableau collectif
+   =========================================================================== */
+
+function chargerBoard() {
+  fetch(API + '?action=board')
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok || !d.entries.length) return;
+      phase = d.phase;
+      const revele = phase === 'revealed';
+
+      show('s-board', true);
+      $('board-sub').textContent = revele
+        ? d.entries.length + ' pronostics, tout est ouvert.'
+        : d.entries.length + ' pronostics. Les dates et les initiales restent secrètes jusqu\'à la naissance.';
+
+      if (revele && d.resultat && d.resultat.date) {
+        show('s-result', true);
+        $('result-title').textContent = d.resultat.prenom || 'Bébé est là';
+        $('result-line').textContent =
+          'Né' + (d.resultat.sexe === 'F' ? 'e' : '') + ' le ' + jolieDate(d.resultat.date) +
+          ', ' + (Number(d.resultat.poids) / 1000).toFixed(2).replace('.', ',') + ' kg, ' +
+          d.resultat.taille + ' cm.';
+      }
+
+      barreSexe(d.entries);
+      ruban('poids', d.entries, 2200, 5000, v => (v / 1000).toFixed(1).replace('.', ','), 400);
+      ruban('taille', d.entries, 42, 58, v => v, 4);
+      tableau(d.entries, revele);
+    })
+    .catch(() => {});
+}
+
+function barreSexe(entries) {
+  const f = entries.filter(e => e.sexe === 'F').length;
+  const m = entries.length - f;
+  $('bar-f').style.flexGrow = Math.max(f, 0.05);
+  $('bar-m').style.flexGrow = Math.max(m, 0.05);
+  $('bar-f').textContent = f ? f + ' fille' + (f > 1 ? 's' : '') : '';
+  $('bar-m').textContent = m ? m + ' garçon' + (m > 1 ? 's' : '') : '';
+  $('sexe-count').textContent = entries.length + ' avis';
+}
+
+function ruban(cle, entries, min, max, fmt, pas) {
+  const rail = $('rail-' + cle);
+  const zone = $('marks-' + cle);
+  rail.innerHTML = '';
+  zone.innerHTML = '';
+
+  const pct = v => ((v - min) / (max - min)) * 100;
+
+  // graduations
+  for (let v = min; v <= max; v += pas / 4) {
+    const t = document.createElement('span');
+    const majeur = Math.abs(v % pas) < 0.001;
+    t.className = 'tick' + (majeur ? ' major' : '');
+    t.style.left = pct(v) + '%';
+    rail.appendChild(t);
+    if (majeur) {
+      const l = document.createElement('span');
+      l.className = 'tick-label';
+      l.style.left = pct(v) + '%';
+      l.textContent = fmt(v);
+      rail.appendChild(l);
+    }
+  }
+
+  // repères, empilés pour ne pas se chevaucher
+  const lignes = [];
+  entries.slice()
+    .sort((a, b) => a[cle] - b[cle])
+    .forEach(e => {
+      const x = Math.min(98, Math.max(2, pct(e[cle])));
+      let ligne = 0;
+      while (lignes[ligne] !== undefined && x - lignes[ligne] < 16) ligne++;
+      lignes[ligne] = x;
+
+      const m = document.createElement('span');
+      m.className = 'mark ' + (e.sexe === 'F' ? 'f' : 'm') + (e.nom === monNom ? ' moi' : '');
+      m.style.left = x + '%';
+      m.style.top = ligne * 26 + 'px';
+      m.innerHTML = '<i></i><b></b>';
+      m.querySelector('b').textContent = prenomCourt(e.nom);
+      zone.appendChild(m);
+    });
+
+  zone.style.height = (lignes.length * 26 + 8) + 'px';
+}
+
+function tableau(entries, revele) {
+  const cols = revele
+    ? ['Qui', 'Sexe', 'Poids', 'Taille', 'Jour', 'Lettre']
+    : ['Qui', 'Sexe', 'Poids', 'Taille'];
+
+  $('board-head').innerHTML = '';
+  cols.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c;
+    $('board-head').appendChild(th);
+  });
+
+  const tb = $('board-body');
+  tb.innerHTML = '';
+  entries.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(e => {
+    const tr = document.createElement('tr');
+    if (e.nom === monNom) tr.className = 'moi';
+
+    const cells = [
+      e.nom,
+      null, // sexe, avec pastille
+      (e.poids / 1000).toFixed(2).replace('.', ',') + ' kg',
+      e.taille + ' cm',
+    ];
+    if (revele) { cells.push(jolieDate(e.date)); cells.push(e.initiale); }
+
+    cells.forEach((v, i) => {
+      const td = document.createElement('td');
+      if (i === 1) {
+        td.innerHTML = '<span class="dot ' + (e.sexe === 'F' ? 'f' : 'm') + '"></span>';
+        td.appendChild(document.createTextNode(e.sexe === 'F' ? 'Fille' : 'Garçon'));
+      } else {
+        td.textContent = v;
+        if (i >= 2) td.className = 'num';
+      }
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+}
+
+/* ===========================================================================
+   Petits utilitaires
+   =========================================================================== */
+
+function remplirLettres() {
+  const sel = $('initiale');
+  for (let i = 65; i <= 90; i++) {
+    const o = document.createElement('option');
+    o.value = o.textContent = String.fromCharCode(i);
+    sel.appendChild(o);
+  }
+}
+
+function prenomCourt(nom) {
+  const p = String(nom).split(' ')[0];
+  return p.length > 9 ? p.slice(0, 8) + '.' : p;
+}
+
+function jolieDate(iso) {
+  if (!iso) return '';
+  const [a, m, j] = String(iso).split('-');
+  const mois = ['janvier','février','mars','avril','mai','juin','juillet',
+                'août','septembre','octobre','novembre','décembre'];
+  return Number(j) + ' ' + mois[Number(m) - 1] + ' ' + a;
+}
+</script>
+</body>
+</html>
