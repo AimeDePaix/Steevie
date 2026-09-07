@@ -2,31 +2,27 @@
    modele.js — le cerveau statistique de Steevie
    ============================================================================
 
-   ⚠️ CE FICHIER EXISTE EN DEUX EXEMPLAIRES IDENTIQUES :
-      1. modele.js  — dans le repo GitHub, pour les cotes en direct
-      2. Modele.gs  — dans Apps Script, pour recalculer à l'enregistrement
-      Quand tu en modifies un, remplace l'autre par un copier-coller intégral.
+   ⚠️ DEUX EXEMPLAIRES IDENTIQUES :
+      1. modele.js  — repo GitHub, pour les cotes en direct
+      2. Modele.gs  — Apps Script, pour recalculer à l'enregistrement
+      Quand tu modifies l'un, remplace l'autre par un copier-coller intégral.
 
-   PRINCIPE : une gaussienne par question, calée sur le sexe. Le poids ne
-   dépend pas de la date, la taille ne dépend pas du poids. Seul l'ascendant
-   reste conditionné, au créneau horaire, parce que c'est de l'astronomie et
-   non de la statistique : à une heure donnée, certains signes sont
-   physiquement impossibles.
-
-   Tous les paramètres viennent de l'onglet Config du Google Sheet.
+   Huit questions, une loi par question. Deux conditionnements seulement :
+   le poids, la taille et la lettre dépendent du sexe ; l'ascendant dépend
+   du créneau horaire, parce que c'est de l'astronomie et non de la
+   statistique.
    ============================================================================ */
 
 var STV_SIGNES = ['Bélier', 'Taureau', 'Gémeaux', 'Cancer', 'Lion', 'Vierge',
   'Balance', 'Scorpion', 'Sagittaire', 'Capricorne', 'Verseau', 'Poissons'];
 
-/* Les naissances spontanées piquent la nuit, les déclenchements en journée. */
 var STV_CRENEAUX = [
-  { cle: '0h-4h',   debut: 0,  fin: 4,  poids: 19 },
-  { cle: '4h-8h',   debut: 4,  fin: 8,  poids: 20 },
-  { cle: '8h-12h',  debut: 8,  fin: 12, poids: 17 },
-  { cle: '12h-16h', debut: 12, fin: 16, poids: 15 },
-  { cle: '16h-20h', debut: 16, fin: 20, poids: 14 },
-  { cle: '20h-0h',  debut: 20, fin: 24, poids: 15 }
+  { cle: '0h-4h',   debut: 0,  fin: 4,  poids: 19, couleur: '#1B2A4A', nuit: true },
+  { cle: '4h-8h',   debut: 4,  fin: 8,  poids: 20, couleur: '#456092', nuit: true },
+  { cle: '8h-12h',  debut: 8,  fin: 12, poids: 17, couleur: '#EFC65C', nuit: false },
+  { cle: '12h-16h', debut: 12, fin: 16, poids: 15, couleur: '#F2D98A', nuit: false },
+  { cle: '16h-20h', debut: 16, fin: 20, poids: 14, couleur: '#C97B37', nuit: false },
+  { cle: '20h-0h',  debut: 20, fin: 24, poids: 15, couleur: '#243761', nuit: true }
 ];
 
 /* PROVISOIRE — à remplacer par le fichier des prénoms de l'INSEE. */
@@ -37,11 +33,33 @@ var STV_LETTRES = {
        N:3, O:2, P:1, Q:0.2, R:4, S:5, T:2, U:0.2, V:2, W:0.2, X:0.2, Y:1, Z:2 }
 };
 
-var STV_CHEVELU = [
-  { cle: 'chauve',   libelle: 'Pas un cheveu' },
-  { cle: 'duvet',    libelle: 'Un petit duvet' },
-  { cle: 'crinière', libelle: 'Une vraie tignasse' }
+var STV_COUPE = [
+  { cle: 'chauve',   libelle: 'Trois poils sur le caillou',
+    detail: 'comme papa dans quelques années' },
+  { cle: 'duvet',    libelle: 'Un joli duvet',
+    detail: 'de quoi caresser, pas de quoi coiffer' },
+  { cle: 'crinière', libelle: 'Une vraie tignasse',
+    detail: 'le coiffeur avant la maternité' }
 ];
+
+/* La patate : l'option pour rire. Cote absurde, et elle bloque tout le
+   reste du formulaire puisqu'on mise alors ses cent jetons dessus. */
+var STV_COTE_PATATE = 10000;
+
+var STV_CARACTERES = {
+  'Bélier': 'fonce d\'abord, réfléchit ensuite',
+  'Taureau': 'obstiné, gourmand, difficile à faire bouger',
+  'Gémeaux': 'deux idées à la seconde, aucune terminée',
+  'Cancer': 'tendre à l\'intérieur, carapace à l\'extérieur',
+  'Lion': 'né pour être regardé, et il le sait',
+  'Vierge': 'range les jouets par ordre de taille',
+  'Balance': 'ne choisira jamais le restaurant',
+  'Scorpion': 'intense en tout, y compris dans les siestes',
+  'Sagittaire': 'partira loin, dès qu\'il saura marcher',
+  'Capricorne': 'sérieux comme un pape à trois ans',
+  'Verseau': 'fera l\'inverse de ce qu\'on attend',
+  'Poissons': 'la tête dans les nuages, et c\'est très bien'
+};
 
 
 /* ============================================================================
@@ -74,8 +92,8 @@ function stvNormalise(o) {
   return r;
 }
 
-/* Cotes lisibles : entières au-dessus de 4, une seule décimale en dessous.
-   La valeur arrondie est celle qui est enregistrée et qui paie, pour que
+/* Cotes lisibles : entières au-dessus de 4, une décimale en dessous. La
+   valeur arrondie est celle qui est enregistrée et qui paie, pour que
    l'affichage et le gain ne puissent jamais diverger. */
 function stvCote(cfg, p) {
   var v = Math.min(cfg.cote_max, Math.max(1.1, 1 / Math.max(p, 1e-6)));
@@ -84,6 +102,7 @@ function stvCote(cfg, p) {
 
 function stvFmtCote(v) {
   if (v === null || v === undefined) return '—';
+  if (v >= 1000) return String(Math.round(v));
   return String(Math.round(v * 10) / 10).replace('.', ',');
 }
 
@@ -112,52 +131,52 @@ function stvJourVersDate(cfg, jour) {
 function stvKg(g) { return (g / 1000).toFixed(1).replace('.', ',') + ' kg'; }
 
 function stvTranchesPoids(cfg) {
-  var t = [{ cle: 'lt', libelle: 'moins de ' + stvKg(cfg.poids_bas) }];
+  var t = [{ cle: 'lt', libelle: 'moins de ' + stvKg(cfg.poids_bas), court: '< ' + stvKg(cfg.poids_bas) }];
   for (var g = cfg.poids_bas; g < cfg.poids_haut; g += cfg.poids_pas) {
     t.push({ cle: String(g), min: g, max: g + cfg.poids_pas,
-             libelle: stvKg(g) + ' – ' + stvKg(g + cfg.poids_pas) });
+             libelle: stvKg(g) + ' – ' + stvKg(g + cfg.poids_pas),
+             court: stvKg(g).replace(' kg', '') });
   }
-  t.push({ cle: 'gt', libelle: 'plus de ' + stvKg(cfg.poids_haut) });
+  t.push({ cle: 'gt', libelle: 'plus de ' + stvKg(cfg.poids_haut), court: '> ' + stvKg(cfg.poids_haut) });
   return t;
 }
 
 function stvTranchesTaille(cfg) {
-  var t = [{ cle: 'lt', libelle: 'moins de ' + cfg.taille_bas + ' cm' }];
+  var t = [{ cle: 'lt', libelle: 'moins de ' + cfg.taille_bas + ' cm', valeur: cfg.taille_bas - 1.5 }];
   for (var c = cfg.taille_bas; c <= cfg.taille_haut; c++) {
-    t.push({ cle: String(c), libelle: c + ' cm' });
+    t.push({ cle: String(c), libelle: c + ' cm', valeur: c });
   }
-  t.push({ cle: 'gt', libelle: 'plus de ' + cfg.taille_haut + ' cm' });
+  t.push({ cle: 'gt', libelle: 'plus de ' + cfg.taille_haut + ' cm', valeur: cfg.taille_haut + 1.5 });
   return t;
 }
 
 
 /* ============================================================================
-   Les lois de probabilité
+   Les lois
    ============================================================================ */
 
 function stvLoiSexe(cfg) {
   return { G: cfg.p_garcon, F: 1 - cfg.p_garcon };
 }
 
-/* Normale tronquée en jours d'écart au terme, queue prématurée épaissie.
-   Ne PAS ajouter de facteur sur les jours tardifs : le 8 décembre
-   deviendrait plus probable que le terme lui-même, ce qui est faux. */
+/**
+ * La date. Gaussienne ASYMÉTRIQUE autour du terme : l'étalement avant est
+ * bien plus large que l'étalement après, parce qu'on peut accoucher trois
+ * semaines en avance mais qu'au-delà de quelques jours de dépassement,
+ * l'équipe médicale déclenche. Le mode est placé légèrement avant le terme.
+ */
 function stvLoiDate(cfg) {
   var p = {};
   for (var g = cfg.date_min; g <= cfg.date_max; g++) {
-    var v = stvBande(g - 0.5, g + 0.5, cfg.date_mu, cfg.date_sd);
-    if (g <= cfg.premature_seuil) v *= cfg.premature_facteur;
-    p[g] = v;
+    var sd = (g <= cfg.date_mu) ? cfg.date_sd_avant : cfg.date_sd_apres;
+    p[g] = stvBande(g - 0.5, g + 0.5, cfg.date_mu, sd);
   }
   return stvNormalise(p);
 }
 
-/* Poids : gaussienne centrée sur la moyenne du sexe, décalée par l'hérédité
-   des parents (0,20 × la mère + 0,12 × le père, plafonné). */
 function stvLoiPoids(cfg, sexe) {
   var mu = cfg['poids_moyen_' + sexe] + stvBorne(cfg.ajust_poids, cfg.ajust_poids_max);
   var sd = cfg.poids_sd, p = {};
-
   p.lt = stvCdf(cfg.poids_bas, mu, sd);
   for (var g = cfg.poids_bas; g < cfg.poids_haut; g += cfg.poids_pas) {
     p[String(g)] = stvBande(g, g + cfg.poids_pas, mu, sd);
@@ -166,11 +185,9 @@ function stvLoiPoids(cfg, sexe) {
   return stvNormalise(p);
 }
 
-/* Taille : même principe, gaussienne calée sur le sexe. */
 function stvLoiTaille(cfg, sexe) {
   var mu = cfg['taille_moyenne_' + sexe] + stvBorne(cfg.ajust_taille, cfg.ajust_taille_max);
   var sd = cfg.taille_sd, p = {};
-
   p.lt = stvCdf(cfg.taille_bas - 0.5, mu, sd);
   for (var c = cfg.taille_bas; c <= cfg.taille_haut; c++) {
     p[String(c)] = stvBande(c - 0.5, c + 0.5, mu, sd);
@@ -191,16 +208,14 @@ function stvLoiHeure() {
   return stvNormalise(p);
 }
 
-function stvLoiChevelu(cfg) {
+/* Les deux parents avaient une tignasse à la naissance : la crinière est
+   donc l'issue la plus probable, et celle qui paie le moins. */
+function stvLoiCoupe(cfg) {
   return stvNormalise({
-    chauve: cfg.chevelu_chauve,
-    duvet: cfg.chevelu_duvet,
-    'crinière': cfg.chevelu_criniere
+    chauve: cfg.coupe_chauve,
+    duvet: cfg.coupe_duvet,
+    'crinière': cfg.coupe_criniere
   });
-}
-
-function stvLoiTop100(cfg) {
-  return { oui: cfg.p_top100, non: 1 - cfg.p_top100 };
 }
 
 
@@ -215,8 +230,6 @@ function stvJourJulien(annee, mois, jour, heureUTC) {
        + jour + b - 1524.5 + heureUTC / 24;
 }
 
-/* Signe solaire, déduit de la date pariée. Jamais une question de pari :
-   ce serait payer deux fois le pari sur la date. */
 function stvSigneSolaire(iso) {
   var p = iso.split('-');
   var jd = stvJourJulien(Number(p[0]), Number(p[1]), Number(p[2]), 12);
@@ -241,10 +254,19 @@ function stvAscendant(jd, lat, lonEst) {
   return STV_SIGNES[Math.floor(lon / 30)];
 }
 
-/* L'ascendant est le seul conditionnement conservé : à une date et un créneau
-   donnés, seuls trois ou quatre signes peuvent se lever à l'horizon. Sans
-   cela, parier « 12h-16h » et « ascendant Bélier » rapporterait une grosse
-   cote pour un événement en réalité très probable. */
+/* Calcule l'ascendant d'une personne. Décalage horaire approché : heure
+   d'été d'avril à octobre, heure d'hiver le reste de l'année. */
+function stvMonAscendant(iso, heure, minute, lat, lonEst) {
+  var p = iso.split('-'), mois = Number(p[1]);
+  var offset = (mois >= 4 && mois <= 10) ? 2 : 1;
+  var jd = stvJourJulien(Number(p[0]), mois, Number(p[2]),
+                         heure + minute / 60 - offset);
+  return stvAscendant(jd, lat, lonEst);
+}
+
+/* À une date et un créneau donnés, seuls trois ou quatre signes peuvent se
+   lever à l'horizon. Sans ce conditionnement, parier « 12h-16h » et
+   « Bélier » paierait gros pour un événement en réalité très probable. */
 function stvLoiAscendant(cfg, iso, creneauCle) {
   var cr = null;
   for (var i = 0; i < STV_CRENEAUX.length; i++) {
@@ -269,6 +291,7 @@ function stvLoiAscendant(cfg, iso, creneauCle) {
 
 function stvCalculer(cfg, r) {
   r = r || {};
+  var patate = (r.sexe === 'P');
   var sexe = (r.sexe === 'F' || r.sexe === 'G') ? r.sexe : 'G';
 
   var lois = {
@@ -277,16 +300,15 @@ function stvCalculer(cfg, r) {
     poids:     stvLoiPoids(cfg, sexe),
     taille:    stvLoiTaille(cfg, sexe),
     lettre:    stvLoiLettre(cfg, sexe),
-    top100:    stvLoiTop100(cfg),
     heure:     stvLoiHeure(),
     ascendant: stvLoiAscendant(cfg, r.date || stvJourVersDate(cfg, cfg.date_mu), r.heure),
-    chevelu:   stvLoiChevelu(cfg)
+    chevelu:   stvLoiCoupe(cfg)
   };
 
   var choix = {
     sexe: r.sexe,
     date: (r.date ? String(stvDateVersJour(cfg, r.date)) : null),
-    poids: r.poids, taille: r.taille, lettre: r.lettre, top100: r.top100,
+    poids: r.poids, taille: r.taille, lettre: r.lettre,
     heure: r.heure, ascendant: r.ascendant, chevelu: r.chevelu
   };
 
@@ -297,12 +319,15 @@ function stvCalculer(cfg, r) {
       ? stvCote(cfg, lois[q][c]) : null;
   }
 
-  return { lois: lois, cotes: cotes, sexeUtilise: sexe };
+  if (patate) {
+    cotes.sexe = STV_COTE_PATATE;
+    cotes.date = cotes.poids = cotes.taille = cotes.lettre = null;
+    cotes.heure = cotes.ascendant = cotes.chevelu = null;
+  }
+
+  return { lois: lois, cotes: cotes, sexeUtilise: sexe, patate: patate };
 }
 
-/* Cotes de toutes les options d'une question, pour les inscrire sur chaque
-   pastille. Celles du poids, de la taille et de la lettre bougent quand on
-   change le sexe : c'est le petit effet qui rend le formulaire vivant. */
 function stvCotesOptions(cfg, loi) {
   var out = {};
   for (var k in loi) out[k] = stvCote(cfg, loi[k]);

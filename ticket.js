@@ -115,7 +115,7 @@ function dessinerTicket(canvas, cfg, pseudo, prono, questions) {
 
   c.fillStyle = TK.soft;
   c.font = '400 15px Karla, sans-serif';
-  c.fillText('Terme le ' + frDate(cfg.terme_affiche) + ' · pronostics clos le ' + frDate(cfg.cloture),
+  c.fillText('Terme le ' + frDate(cfg.terme) + ' · pronostics clos le ' + frDate(cfg.cloture),
              M, y + 76);
 }
 
@@ -137,12 +137,14 @@ function tronque(c, txt, max) {
 /* Traduit une valeur brute en libellé lisible sur le ticket. */
 function libelleReponse(cfg, cle, v) {
   if (!v) return '—';
-  if (cle === 'sexe')    return v === 'F' ? 'Une fille' : 'Un garçon';
+  if (cle === 'sexe') {
+    if (v === 'P') return 'Une pomme de terre';
+    return v === 'F' ? 'Une fille' : 'Un garçon';
+  }
   if (cle === 'date')    return frDate(v);
-  if (cle === 'top100')  return v === 'oui' ? 'Prénom du top 100' : 'Prénom hors top 100';
   if (cle === 'chevelu') {
-    for (var i = 0; i < STV_CHEVELU.length; i++) {
-      if (STV_CHEVELU[i].cle === v) return STV_CHEVELU[i].libelle;
+    for (var i = 0; i < STV_COUPE.length; i++) {
+      if (STV_COUPE[i].cle === v) return STV_COUPE[i].libelle;
     }
   }
   if (cle === 'poids')  return chercheLibelle(stvTranchesPoids(cfg), v);

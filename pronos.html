@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Steevie — les pronostics de tout le monde</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Les pronostics de</p>
+    <h1>Steevie</h1>
+    <p class="terme" id="terme"></p>
+  </header>
+
+  <section id="s-load"><p class="sub" style="margin:0">Un instant…</p></section>
+
+  <!-- tant que le visiteur n'a pas validé ses propres pronostics -->
+  <section id="s-verrou" class="hidden">
+    <h2>Pas si vite</h2>
+    <p class="sub">Les pronostics des autres ne se dévoilent qu'une fois les
+      tiens enregistrés. Ce serait trop simple de recopier la moyenne de la
+      famille.</p>
+    <a class="cta bloc" id="lien-retour" href="#">Faire mes pronostics</a>
+  </section>
+
+  <!-- le tableau -->
+  <section id="s-table" class="hidden">
+    <h2>Ce que dit la famille</h2>
+    <p class="sub" id="table-sub"></p>
+    <div id="tableau"></div>
+    <p class="note">Seuls le sexe, le jour, le poids et la taille sont
+      montrés. La lettre du prénom, l'heure, l'ascendant et la coupe restent
+      secrets jusqu'à la naissance.</p>
+    <a class="cta ghost bloc" id="lien-retour2" href="#" style="margin-top:20px">Retour à mes pronostics</a>
+  </section>
+
+  <!-- après la naissance -->
+  <section id="s-result" class="hidden">
+    <h2 id="result-title"></h2>
+    <p class="sub" id="result-line"></p>
+    <div id="classement"></div>
+  </section>
+
+  <footer>Une page privée pour Steevie</footer>
+</div>
+
+<script src="config.js"></script>
+<script src="modele.js"></script>
+<script src="pronos.js"></script>
+</body>
+</html>
