@@ -17,7 +17,6 @@
   <header>
     <p class="eyebrow">Les pronostics de</p>
     <h1>Steevie</h1>
-    <p class="terme" id="terme"></p>
   </header>
 
   <!-- ============================================== chargement -->
@@ -25,16 +24,23 @@
 
   <!-- ============================================== accueil -->
   <section id="s-accueil" class="hidden">
-    <p class="accroche">Pour préparer l'arrivée de Steevie, on vous propose un
-      petit jeu de paris entre nous.</p>
+    <p class="accroche">Qui est Steevie ?</p>
 
-    <p>Combien pèsera-t-il ? Ou pèsera-t-elle. Quel jour débarquera ce bébé,
-      à quelle heure, avec quelle tête et quelle coupe de cheveux ? Personne
-      n'en sait rien, nous les premiers. Alors autant en faire un concours.</p>
+    <p>Malgré plusieurs mois à le fréquenter jour et nuit, nous savons finalement
+      sur Steevie peu de choses. Qu'il a des prédispositions certaines pour le
+      Muay-thaï, ça oui. Mais est-ce qu'il sera format Steevie Mathy ou
+      Steevanyama ? Que son anniversaire ne sera jamais très loin de Noël, ça
+      oui. Mais est-ce qu'il aura la passion du Scorpion ou l'optimisme du
+      Sagittaire ? S'agira-t-il d'ailleurs d'un Steeve ou d'une Steevette ?
+      En attendant de faire enfin sa connaissance, on ne peut qu'essayer de
+      deviner. Et c'est ce qu'on te propose de faire avec nous.</p>
 
-    <p>Chacun reçoit cent jetons à répartir sur huit questions, chaque réponse
-      a sa cote, et le plus perspicace de la famille remportera une gloire
-      considérable et absolument aucun lot.</p>
+    <p>100 jetons, 8 questions, un système de cote, et un maximum de points à
+      gagner. Si tu finis premier, tu remporteras la gloire éternelle, et
+      peut-être le bavoir porté par Steevie lors de son premier biberon, et
+      donc dédicacé.</p>
+
+    <p class="accroche petite">Prêt ? Place au jeu !</p>
 
     <p class="signature">Eve-Ma &amp; Max</p>
 
@@ -42,7 +48,7 @@
 
     <h2>Reçois ton lien</h2>
     <p class="sub">Chaque invité a un lien personnel, envoyé par mail. Entre
-      l'adresse à laquelle tu as été invité et il repart tout de suite.</p>
+      ton mail ici et garde ensuite le lien de connexion reçu.</p>
     <div style="margin-bottom:16px">
       <label class="q" for="email">Ton adresse mail</label>
       <input type="email" id="email" placeholder="prenom@exemple.fr" autocomplete="email">
@@ -106,22 +112,19 @@
         rarement beaucoup. Tout l'art est de doser.</p>
     </div>
 
-    <h3 class="sstitre">Les huit questions</h3>
-    <div id="liste-categories"></div>
-
     <p class="note" id="regles-cloture"></p>
     <button class="cta" id="btn-regles" style="margin-top:20px">Compris, passons aux indices</button>
   </section>
 
   <!-- ============================================== encart 2 : les indices -->
   <section id="s-quiz" class="hidden">
-    <h2>D'abord, quelques indices</h2>
-    <p class="sub">Avant de passer aux pronostics, répondez à ces trois
-      questions : voilà à quoi ressemblaient papa et maman à la naissance.
-      Beaux gosses, non ? Ces chiffres comptent vraiment, les cotes en
-      tiennent déjà compte, inutile de chercher la faille.</p>
+    <h2>Commençons par quelques indices</h2>
+    <p class="sub">À quoi ressemblaient Papa &amp; Maman à la naissance ?
+      Réponds à ce quizz pour révéler leurs petites bouilles de l'époque.</p>
 
-    <div class="parents">
+    <div id="quiz-questions"></div>
+
+    <div class="parents voilees" id="parents">
       <div class="parent cache" id="parent-papa">
         <div class="photo"><img src="papa.jpg" alt="Papa bébé"></div>
         <div class="nom">Papa</div>
@@ -133,10 +136,9 @@
         <div class="mesures" id="mes-maman"></div>
       </div>
     </div>
+    <p class="legende-parents" id="legende-parents">Beaux gosses, non ?</p>
 
-    <div id="quiz-questions" style="margin-top:26px"></div>
-    <button class="cta hidden" id="btn-quiz-suite">Passer aux pronostics</button>
-    <button class="link hidden" id="btn-quiz-skip" style="display:block;margin:14px auto 0">Passer les indices</button>
+    <button class="cta hidden" id="btn-quiz-suite">Maintenant que tu as des indices, place aux pronos</button>
   </section>
 
   <!-- ============================================== formulaire -->
@@ -160,6 +162,14 @@
       <button class="cta ghost" id="btn-edit">Modifier</button>
     </div>
     <a class="cta bloc" id="lien-pronos" href="#">Voir les pronostics de tout le monde</a>
+
+    <div class="merci">
+      <p class="merci-titre">Merci d'avoir joué</p>
+      <p>On vous dira tout dès que Steevie sera là, et le classement se
+        dévoilera dans la foulée.</p>
+      <a class="cta ghost bloc" id="lien-mots" href="mots.html">Laisser un mot à Steevie</a>
+      <a class="cta ghost bloc hidden" id="lien-liste" href="liste.html">Voir la liste de naissance</a>
+    </div>
   </section>
 
   <footer>Une page privée pour Steevie</footer>

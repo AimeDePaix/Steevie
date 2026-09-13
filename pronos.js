@@ -11,6 +11,7 @@ var show = function (id, on) { $(id).classList.toggle('hidden', !on); };
 var retour = 'index.html' + (TOKEN ? '?t=' + encodeURIComponent(TOKEN) : '');
 $('lien-retour').href = retour;
 $('lien-retour2').href = retour;
+$('lien-liste').href = 'liste.html' + (TOKEN ? '?t=' + encodeURIComponent(TOKEN) : '');
 
 fetch(API + '?action=board&t=' + encodeURIComponent(TOKEN))
   .then(function (r) { return r.json(); })
@@ -25,7 +26,6 @@ function afficher(d) {
 
   CFG = d.config;
   MOI = d.moi || '';
-  $('terme').textContent = 'Terme prévu le ' + jolieDate(CFG.terme);
 
   show('s-table', true);
   $('table-sub').textContent = d.entries.length + ' participant'

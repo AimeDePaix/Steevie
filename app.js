@@ -60,7 +60,6 @@ function demarrer(d) {
   PHASE = d.phase;
   MOI = { prenom: d.prenom, pseudo: d.pseudo || '' };
 
-  $('terme').textContent = 'Terme prévu le ' + jolieDate(CFG.terme);
   $('mes-papa').innerHTML = enKg(CFG.papa_poids) + ' · ' + CFG.papa_taille + ' cm'
     + '<br>né à ' + CFG.papa_heure;
   $('mes-maman').innerHTML = enKg(CFG.maman_poids) + ' · ' + CFG.maman_taille + ' cm'
@@ -70,6 +69,9 @@ function demarrer(d) {
     + 'répartir. Tu peux tout modifier jusqu\'au ' + jolieDate(CFG.cloture) + '.';
 
   $('lien-pronos').href = 'pronos.html?t=' + encodeURIComponent(TOKEN);
+  $('lien-liste').href = 'liste.html?t=' + encodeURIComponent(TOKEN);
+  $('lien-mots').href = 'mots.html?t=' + encodeURIComponent(TOKEN);
+  show('lien-liste', String(CFG.liste_active) === 'oui');
 
   if (d.prono) {
     R = d.prono.reponses;
@@ -82,19 +84,31 @@ function demarrer(d) {
   apresPseudo();
 }
 
-function apresPseudo() {
-  if (localStorage.getItem('steevie-regles') === 'lues' || DEJA_VALIDE) apresRegles();
-  else { construireRegles(); show('s-regles', true); }
+/* Trois étapes qui s'enchaînent, une seule visible à la fois : les règles,
+   puis les indices, puis les pronostics. Seul quelqu'un qui a déjà validé
+   saute directement à son ticket. */
+function etape(nom) {
+  ['s-accueil', 's-pseudo', 's-regles', 's-quiz', 's-form', 's-ticket']
+    .forEach(function (id) { show(id, id === nom); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function apresRegles() {
-  if (localStorage.getItem('steevie-quiz') === 'fait' || DEJA_VALIDE) {
-    devoilerParents();
-    ouvrirFormulaire();
-  } else {
-    show('s-quiz', true);
-    construireQuiz();
-  }
+function apresPseudo() {
+  if (DEJA_VALIDE) { montrerTicketSiPossible(); return; }
+  construireRegles();
+  etape('s-regles');
+}
+
+/* Les indices ne se jouent qu'une fois. On retient l'info dans le navigateur,
+   pour que quelqu'un qui rouvre son lien sans avoir validé n'ait pas à refaire
+   le quiz, mais qu'un nouveau venu le voie bien passer. */
+function quizDejaFait() {
+  try { return localStorage.getItem('steevie-indices') === 'fait'; }
+  catch (e) { return false; }
+}
+
+function noterQuizFait() {
+  try { localStorage.setItem('steevie-indices', 'fait'); } catch (e) {}
 }
 
 
@@ -127,15 +141,6 @@ $('btn-pseudo').onclick = function () {
    ============================================================================ */
 
 function construireRegles() {
-  var box = $('liste-categories');
-  box.innerHTML = '';
-  QUESTIONS.forEach(function (q) {
-    var d = document.createElement('div');
-    d.className = 'cat';
-    d.innerHTML = '<div class="cat-nom">' + q.titre + '</div>'
-                + '<div class="cat-txt">' + q.quoi + '</div>';
-    box.appendChild(d);
-  });
   $('regles-cloture').textContent = 'Tu peux revenir modifier tes réponses '
     + 'autant que tu veux, mais tout se fige le ' + jolieDate(CFG.cloture)
     + ' au soir. Après, plus personne ne touche à rien : ce serait trop facile '
@@ -143,16 +148,16 @@ function construireRegles() {
 }
 
 $('btn-regles').onclick = function () {
-  localStorage.setItem('steevie-regles', 'lues');
-  show('s-regles', false);
-  apresRegles();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (quizDejaFait()) { ouvrirFormulaire(); return; }
+  construireQuiz();
+  etape('s-quiz');
 };
 
 $('btn-revoir').onclick = function () {
   construireRegles();
-  show('s-regles', true);
-  $('s-regles').scrollIntoView({ behavior: 'smooth' });
+  etape('s-regles');
+  $('btn-regles').textContent = 'Retour à mes pronostics';
+  $('btn-regles').onclick = function () { ouvrirFormulaire(); };
 };
 
 
@@ -214,7 +219,6 @@ function construireQuiz() {
     box.appendChild(d);
   });
 
-  show('btn-quiz-skip', true);
 }
 
 function libelleBon(q) {
@@ -225,30 +229,19 @@ function libelleBon(q) {
 }
 
 function finQuiz() {
+  noterQuizFait();
   devoilerParents();
   show('btn-quiz-suite', true);
-  show('btn-quiz-skip', false);
-  localStorage.setItem('steevie-quiz', 'fait');
+  $('parents').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function devoilerParents() {
+  $('parents').classList.remove('voilees');
   $('parent-papa').classList.remove('cache');
   $('parent-maman').classList.remove('cache');
-  show('s-quiz', true);
 }
 
-$('btn-quiz-suite').onclick = function () {
-  show('btn-quiz-suite', false);
-  ouvrirFormulaire();
-  $('s-form').scrollIntoView({ behavior: 'smooth' });
-};
-
-$('btn-quiz-skip').onclick = function () {
-  localStorage.setItem('steevie-quiz', 'fait');
-  devoilerParents();
-  show('btn-quiz-skip', false);
-  ouvrirFormulaire();
-};
+$('btn-quiz-suite').onclick = function () { ouvrirFormulaire(); };
 
 
 /* ============================================================================
@@ -257,7 +250,7 @@ $('btn-quiz-skip').onclick = function () {
 
 function ouvrirFormulaire() {
   if (PHASE !== 'open') { montrerFerme(); return; }
-  show('s-form', true);
+  etape('s-form');
   show('solde', true);
   construireQuestions();
   rafraichir();
@@ -301,24 +294,9 @@ function construireQuestions() {
   $('q-ascendant').querySelector('.chapo').innerHTML =
     '<p class="qhint">Pour les plus superstitieux d\'entre nous. L\'ascendant '
     + 'n\'est pas le signe du zodiaque : c\'est la constellation qui se levait '
-    + 'à l\'horizon est à la minute de la naissance. Il tourne avec la Terre et '
+    + 'à l\'horizon Est à la minute de la naissance. Il tourne avec la Terre et '
     + 'change toutes les deux heures environ, ce qui explique qu\'il dépende du '
-    + 'créneau horaire choisi juste au-dessus.</p>'
-    + '<details class="outil"><summary>Tu ne connais pas le tien ? Calcule-le</summary>'
-    + '<div class="outil-corps">'
-    + '<div class="duo"><input type="date" id="asc-date"><input type="time" id="asc-heure" value="12:00"></div>'
-    + '<button class="cta ghost" id="asc-go" style="margin-top:10px">Trouver mon ascendant</button>'
-    + '<p class="asc-res" id="asc-res"></p></div></details>';
-
-  $('asc-go').onclick = function () {
-    var d = $('asc-date').value, h = $('asc-heure').value;
-    if (!d || !h) { $('asc-res').textContent = 'Il faut une date et une heure.'; return; }
-    var p = h.split(':');
-    var s = stvMonAscendant(d, Number(p[0]), Number(p[1]), CFG.lat, CFG.lon);
-    $('asc-res').innerHTML = 'Ascendant <strong>' + s + '</strong> — ' + STV_CARACTERES[s]
-      + '.<br><span class="mini-note">Calculé pour la région parisienne. À quelques '
-      + 'centaines de kilomètres près, le résultat peut basculer sur le signe voisin.</span>';
-  };
+    + 'créneau horaire choisi juste au-dessus.</p>';
 }
 
 
@@ -429,55 +407,125 @@ function pastilles(zone, q, loi, cotes, choisi) {
   zone.appendChild(box);
 }
 
-/* Jauge horizontale du poids, de la crevette au pilier. */
+/* Jauge glissante du poids. Trois repères pour lire la valeur : les
+   graduations chiffrées sous la piste, le libellé en gros, et un poids de
+   balance qui grossit tranche après tranche. */
 function jaugePoids(zone, q, loi, cotes, choisi) {
   var opts = optionsDe('poids');
-  var h = '<div class="jauge-h">';
+  var i = indexDe(opts, choisi);
+  var pose = (i >= 0);
+  if (!pose) i = Math.floor(opts.length / 2);
+
+  zone.innerHTML =
+      '<div class="curseur poids' + (pose ? '' : ' vierge') + '">'
+    +   '<div class="piste"><div class="pastille-c" style="left:' + pct(i, opts.length) + '%"></div></div>'
+    +   '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" aria-label="Poids">'
+    + '</div>'
+    + graduations(opts)
+    + '<div class="choix-ligne avec-icone">'
+    +   '<span class="icone-poids" style="--p:' + echelle(i, opts.length) + '">' + poidsSVG() + '</span>'
+    +   '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
+    +   (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
+    + '</div>';
+
+  brancherCurseur(zone, opts, 'poids');
+}
+
+/* Une graduation sur deux, sinon c'est illisible sur un téléphone. */
+function graduations(opts) {
+  var h = '<div class="gradus">';
   opts.forEach(function (o, i) {
-    var sel = String(choisi) === String(o.v);
-    var t = i / (opts.length - 1);
-    h += '<button class="seg' + (sel ? ' sel' : '') + '" data-v="' + o.v + '"'
-       + ' style="--t:' + t.toFixed(3) + '">'
-       + '<span class="seg-cote">' + stvFmtCote(cotes[o.v]) + '</span></button>';
+    var montre = (i % 2 === 0) || i === opts.length - 1;
+    h += '<span class="gradu' + (montre ? '' : ' muet') + '" style="left:'
+       + pct(i, opts.length) + '%"><i></i>'
+       + (montre ? '<em>' + (o.court || o.l) + '</em>' : '') + '</span>';
   });
-  h += '</div><div class="jauge-bornes"><span>🦐 une crevette</span>'
-     + '<span>pilier du Stade Toulousain 🏉</span></div>'
-     + '<div class="jauge-choix">' + (choisi
-        ? libelleDe(opts, choisi) : 'Choisis une tranche') + '</div>';
-  zone.innerHTML = h;
-  zone.querySelectorAll('.seg').forEach(function (b) {
-    b.onclick = function () { choisir('poids', b.dataset.v); };
-  });
+  return h + '</div>';
 }
 
-/* Jauge verticale de la taille, avec un bébé qui grandit à côté. */
+function echelle(i, n) { return (0.46 + (i / (n - 1)) * 0.74).toFixed(3); }
+
+/* Un poids de balance à l'ancienne, qui grandit avec la tranche choisie. */
+function poidsSVG() {
+  return '<svg viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+    + '<path d="M13 26h34a4 4 0 0 1 4 4v32a5 5 0 0 1-5 5H14a5 5 0 0 1-5-5V30a4 4 0 0 1 4-4z"'
+    + ' fill="none" stroke="currentColor" stroke-width="4"/>'
+    + '<ellipse cx="30" cy="25" rx="21" ry="6" fill="none" stroke="currentColor" stroke-width="4"/>'
+    + '<ellipse cx="30" cy="19" rx="14" ry="5" fill="none" stroke="currentColor" stroke-width="4"/>'
+    + '</svg>';
+}
+
+/* Même principe pour la taille, avec un bébé qui grandit à droite. */
 function jaugeTaille(zone, q, loi, cotes, choisi) {
-  var opts = optionsDe('taille').slice().reverse();
-  var sel = opts.filter(function (o) { return String(o.v) === String(choisi); })[0];
-  var cm = sel ? sel.valeur : CFG.taille_moyenne_G;
-  var k = (0.62 + (cm - (CFG.taille_bas - 2)) / ((CFG.taille_haut + 2) - (CFG.taille_bas - 2)) * 0.55).toFixed(3);
+  var opts = optionsDe('taille');
+  var i = indexDe(opts, choisi);
+  var pose = (i >= 0);
+  if (!pose) i = indexDe(opts, String(Math.round(CFG['taille_moyenne_' + CALC.sexeUtilise])));
+  if (i < 0) i = Math.floor(opts.length / 2);
 
-  var h = '<div class="jauge-v-wrap"><div class="jauge-v">';
-  opts.forEach(function (o) {
-    h += '<button class="pal' + (String(choisi) === String(o.v) ? ' sel' : '') + '"'
-       + ' data-v="' + o.v + '"><span class="pal-lab">' + o.l + '</span>'
-       + '<span class="pal-cote">' + stvFmtCote(cotes[o.v]) + '</span></button>';
-  });
-  h += '</div><div class="bebe-box"><div class="bebe" style="--k:' + k + '">'
-     + bebeSVG() + '</div><div class="bebe-lab">'
-     + (sel ? sel.libelle : 'à toi de voir') + '</div></div></div>';
-  zone.innerHTML = h;
-  zone.querySelectorAll('.pal').forEach(function (b) {
-    b.onclick = function () { choisir('taille', b.dataset.v); };
-  });
+  var cm = opts[i].valeur;
+  var k = (0.60 + (cm - (CFG.taille_bas - 2)) / ((CFG.taille_haut + 2) - (CFG.taille_bas - 2)) * 0.58).toFixed(3);
+
+  zone.innerHTML =
+      '<div class="taille-wrap">'
+    +   '<div class="taille-gauche">'
+    +     '<div class="curseur taille' + (pose ? '' : ' vierge') + '">'
+    +       '<div class="piste"><div class="pastille-c" style="left:' + pct(i, opts.length) + '%"></div></div>'
+    +       '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" '
+    +         'aria-label="Taille">'
+    +     '</div>'
+    +     '<div class="jauge-bornes"><span>tout petit</span><span>déjà grand</span></div>'
+    +     '<div class="choix-ligne">'
+    +       '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
+    +       (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="bebe-box"><div class="bebe" style="--k:' + k + '">'
+    +     bebeSVG(R.sexe) + '</div></div>'
+    + '</div>';
+
+  brancherCurseur(zone, opts, 'taille');
 }
 
-function bebeSVG() {
+function brancherCurseur(zone, opts, cle) {
+  var input = zone.querySelector('input[type=range]');
+  var pastille = zone.querySelector('.pastille-c');
+  var val = zone.querySelector('.choix-val');
+
+  // Aperçu immédiat pendant le glissement, sans reconstruire toute la page.
+  input.oninput = function () {
+    var j = Number(input.value);
+    pastille.style.left = pct(j, opts.length) + '%';
+    val.textContent = opts[j].l;
+    zone.querySelector('.curseur').classList.remove('vierge');
+  };
+  // Le vrai choix n'est enregistré qu'au relâchement.
+  input.onchange = function () { choisir(cle, opts[Number(input.value)].v); };
+}
+
+function pct(i, n) { return (n === 1 ? 50 : (i / (n - 1)) * 100).toFixed(2); }
+
+function indexDe(opts, v) {
+  if (v === null || v === undefined) return -1;
+  for (var i = 0; i < opts.length; i++) if (String(opts[i].v) === String(v)) return i;
+  return -1;
+}
+
+/* Le bébé prend la couleur du pari : rose, bleu, ou ambre tant que le sexe
+   n'est pas choisi. La fille reçoit un nœud, le garçon une mèche rebelle. */
+function bebeSVG(sexe) {
+  var couleur = sexe === 'F' ? '#E5578C' : sexe === 'G' ? '#2F7FD4' : '#D9A31E';
+  var coiffe = sexe === 'F'
+    ? '<path d="M62 22c5-6 15-5 16 3 1 6-5 10-11 8" fill="none" stroke="#E5578C" stroke-width="4" stroke-linecap="round"/>'
+    : sexe === 'G'
+      ? '<path d="M44 22c4-11 14-9 16-3" fill="none" stroke="#5A4033" stroke-width="4" stroke-linecap="round"/>'
+      : '';
   return '<svg viewBox="0 0 90 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
     + '<ellipse cx="45" cy="144" rx="30" ry="5" fill="#17251F" opacity=".10"/>'
-    + '<path d="M20 140c0-38 8-62 25-62s25 24 25 62z" fill="#D9A31E" opacity=".85"/>'
+    + '<path d="M20 140c0-38 8-62 25-62s25 24 25 62z" fill="' + couleur + '" opacity=".85"/>'
     + '<circle cx="45" cy="52" r="27" fill="#F2D7BE"/>'
     + '<path d="M21 42c5-15 15-22 24-22s19 7 24 22c-8-6-16-5-24-5s-16-1-24 5z" fill="#5A4033"/>'
+    + coiffe
     + '<circle cx="35" cy="53" r="3" fill="#17251F"/><circle cx="55" cy="53" r="3" fill="#17251F"/>'
     + '<circle cx="26" cy="61" r="4.5" fill="#E39A9A" opacity=".5"/>'
     + '<circle cx="64" cy="61" r="4.5" fill="#E39A9A" opacity=".5"/>'
@@ -540,8 +588,9 @@ function contexte(d, q, loi) {
   if (q.cle === 'sexe' && R.sexe === 'P') {
     e.innerHTML = '<strong>Tu paries sur une pomme de terre.</strong> Cent jetons, '
       + 'cote 10 000, et le reste du formulaire est bloqué : on ne mise pas sur la '
-      + 'taille d\'un tubercule. Un million de points si tu as raison. Reviens sur '
-      + 'fille ou garçon pour reprendre une vie normale.';
+      + 'taille d\'un tubercule. Un million de points si tu as raison. Bien tenté, '
+      + 'mais l\'échographie est formelle : Steevie n\'est pas un tubercule. '
+      + 'Choisis entre fille ou garçon pour poursuivre le jeu.';
   }
   if (q.cle === 'date' && R.date) {
     e.textContent = 'Ton pronostic donne un ' + stvSigneSolaire(R.date)

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Steevie — liste de naissance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">La liste de naissance de</p>
+    <h1>Steevie</h1>
+  </header>
+
+  <section>
+    <p class="accroche">Steevie arrive léger.</p>
+    <p>Il n'a ni vêtements, ni lit, ni la moindre opinion sur la décoration de
+      sa chambre. Si vous voulez l'aider à s'installer, voilà de quoi piocher.</p>
+    <p>Réserver un cadeau le réserve pour vous seul, personne d'autre ne pourra
+      le prendre. On ne voit pas qui a réservé quoi, alors gardez la surprise.</p>
+
+    <div class="apercu">
+      <strong>Aperçu</strong> — cette page est une maquette. Les articles
+      ci-dessous sont des exemples, et le bouton de réservation n'est pas
+      encore branché.
+    </div>
+  </section>
+
+  <section>
+    <div class="filtres" id="filtres"></div>
+    <div id="cadeaux"></div>
+    <div class="jauge-liste">
+      <div class="jauge-liste-piste"><div class="jauge-liste-remplie" id="avancement"></div></div>
+      <p class="jauge-liste-txt" id="avancement-txt"></p>
+    </div>
+    <a class="cta ghost bloc" id="retour" href="index.html" style="margin-top:24px">Retour aux pronostics</a>
+  </section>
+
+  <footer>Une page privée pour Steevie</footer>
+</div>
+
+<script>
+/* Données d'exemple. À terme, elles viendront d'un onglet « Cadeaux » du
+   Google Sheet, avec une colonne « réservé par » que le serveur remplira. */
+var CADEAUX = [
+  { n: 'Gigoteuse 0-6 mois',        p: 39,  c: 'Dormir',     e: '🌙', r: false },
+  { n: 'Veilleuse à intensité douce', p: 29, c: 'Dormir',     e: '💡', r: true  },
+  { n: 'Drap housse en lin, x2',    p: 45,  c: 'Dormir',     e: '🛏️', r: false },
+  { n: 'Turbulette hiver',          p: 49,  c: 'Dormir',     e: '❄️', r: false },
+  { n: 'Body manches longues, lot de 5', p: 32, c: 'S\'habiller', e: '👕', r: false },
+  { n: 'Chaussons en cuir souple',  p: 24,  c: 'S\'habiller', e: '👟', r: true  },
+  { n: 'Bavoirs en coton, lot de 3', p: 18, c: 'S\'habiller', e: '🧣', r: false },
+  { n: 'Porte-bébé physiologique',  p: 129, c: 'Sortir',     e: '🎒', r: false },
+  { n: 'Sac à langer',              p: 79,  c: 'Sortir',     e: '👜', r: false },
+  { n: 'Matelas à langer nomade',   p: 35,  c: 'Sortir',     e: '🧳', r: false },
+  { n: 'Mobile musical',            p: 42,  c: 'Jouer',      e: '🎵', r: false },
+  { n: 'Tapis d\'éveil',            p: 65,  c: 'Jouer',      e: '🧸', r: true  },
+  { n: 'Livres en tissu, lot de 3', p: 22,  c: 'Jouer',      e: '📚', r: false },
+  { n: 'Hochet en bois',            p: 14,  c: 'Jouer',      e: '🪀', r: false }
+];
+
+var filtre = 'Tout';
+
+var cats = ['Tout'].concat(CADEAUX.map(function (g) { return g.c; })
+  .filter(function (v, i, a) { return a.indexOf(v) === i; }));
+
+function rendre() {
+  document.getElementById('filtres').innerHTML = cats.map(function (c) {
+    return '<button class="filtre' + (c === filtre ? ' actif' : '') + '" data-c="'
+      + c + '">' + c + '</button>';
+  }).join('');
+
+  var liste = CADEAUX.filter(function (g) { return filtre === 'Tout' || g.c === filtre; });
+
+  document.getElementById('cadeaux').innerHTML = liste.map(function (g, i) {
+    return '<div class="cadeau' + (g.r ? ' pris' : '') + '">'
+      + '<div class="cadeau-vignette">' + g.e + '</div>'
+      + '<div class="cadeau-corps">'
+      +   '<div class="cadeau-nom">' + g.n + '</div>'
+      +   '<div class="cadeau-meta">' + g.c + ' · ' + g.p + ' €</div>'
+      + '</div>'
+      + (g.r
+          ? '<span class="cadeau-etat">Réservé</span>'
+          : '<button class="cadeau-btn" data-i="' + CADEAUX.indexOf(g) + '">Réserver</button>')
+      + '</div>';
+  }).join('');
+
+  var pris = CADEAUX.filter(function (g) { return g.r; }).length;
+  document.getElementById('avancement').style.width = (pris / CADEAUX.length * 100) + '%';
+  document.getElementById('avancement-txt').textContent =
+    pris + ' cadeau' + (pris > 1 ? 'x' : '') + ' sur ' + CADEAUX.length + ' déjà réservé'
+    + (pris > 1 ? 's' : '');
+
+  document.querySelectorAll('.filtre').forEach(function (b) {
+    b.onclick = function () { filtre = b.dataset.c; rendre(); };
+  });
+  document.querySelectorAll('.cadeau-btn').forEach(function (b) {
+    b.onclick = function () {
+      b.textContent = 'Bientôt disponible';
+      b.disabled = true;
+    };
+  });
+}
+
+rendre();
+
+var t = new URLSearchParams(location.search).get('t');
+if (t) document.getElementById('retour').href = 'index.html?t=' + encodeURIComponent(t);
+</script>
+</body>
+</html>

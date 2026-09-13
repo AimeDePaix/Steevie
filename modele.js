@@ -25,21 +25,42 @@ var STV_CRENEAUX = [
   { cle: '20h-0h',  debut: 20, fin: 24, poids: 15, couleur: '#243761', nuit: true }
 ];
 
-/* PROVISOIRE — à remplacer par le fichier des prénoms de l'INSEE. */
+/* Initiales des prénoms — fichier INSEE, naissances 2021-2025, 3 169 645 cas.
+   Trois marchés : G conditionnel aux garçons, F aux filles, X « inconnu »
+   (0,5141 × G + 0,4859 × F), utilisé tant que le parieur n'a pas choisi le sexe.
+   Initiale prise après normalisation des accents (Éva → E) et sur le premier
+   élément des prénoms composés (Jean-Baptiste → J).
+   LIMITE : le fichier INSEE exclut les prénoms donnés moins de 20 fois par an,
+   soit environ 8 % des naissances. Les initiales rares (X, U, Q, W) sont donc
+   sous-estimées et leurs cotes trop généreuses ; le plafond les corrige en partie. */
 var STV_LETTRES = {
-  G: { A:13, B:2, C:4, D:2, E:5, F:1, G:6, H:2, I:2, J:5, K:1, L:14, M:10,
-       N:7, O:2, P:2, Q:0.2, R:7, S:4, T:6, U:0.2, V:1, W:0.3, X:0.3, Y:1, Z:1 },
-  F: { A:13, B:2, C:6, D:2, E:8, F:1, G:1, H:2, I:4, J:6, K:1, L:13, M:9,
-       N:3, O:2, P:1, Q:0.2, R:4, S:5, T:2, U:0.2, V:2, W:0.2, X:0.2, Y:1, Z:2 }
+  G: {
+    A:0.139700, B:0.015211, C:0.029643, D:0.017773, E:0.076889, F:0.008123,
+    G:0.039103, H:0.022797, I:0.051908, J:0.039174, K:0.031527, L:0.105759,
+    M:0.130362, N:0.066217, O:0.015521, P:0.015457, Q:0.001734, R:0.035504,
+    S:0.055670, T:0.043645, U:0.002507, V:0.011133, W:0.008497, X:0.000178,
+    Y:0.022008, Z:0.013959
+  },
+  F: {
+    A:0.174849, B:0.009560, C:0.060737, D:0.016777, E:0.087554, F:0.012985,
+    G:0.017757, H:0.024451, I:0.034268, J:0.053583, K:0.025730, L:0.145318,
+    M:0.105276, N:0.047324, O:0.013323, P:0.007713, Q:0.000195, R:0.038397,
+    S:0.056134, T:0.023084, U:0.000257, V:0.016374, W:0.001711, X:0.000052,
+    Y:0.011693, Z:0.014897
+  },
+  X: {
+    A:0.156780, B:0.012465, C:0.044753, D:0.017289, E:0.082072, F:0.010486,
+    G:0.028730, H:0.023601, I:0.043336, J:0.046175, K:0.028710, L:0.124982,
+    M:0.118172, N:0.057036, O:0.014453, P:0.011694, Q:0.000986, R:0.036910,
+    S:0.055896, T:0.033654, U:0.001414, V:0.013680, W:0.005200, X:0.000117,
+    Y:0.016996, Z:0.014415
+  }
 };
 
 var STV_COUPE = [
-  { cle: 'chauve',   libelle: 'Trois poils sur le caillou',
-    detail: 'comme papa dans quelques années' },
-  { cle: 'duvet',    libelle: 'Un joli duvet',
-    detail: 'de quoi caresser, pas de quoi coiffer' },
-  { cle: 'crinière', libelle: 'Une vraie tignasse',
-    detail: 'le coiffeur avant la maternité' }
+  { cle: 'chauve',   libelle: 'Trois poils sur le caillou' },
+  { cle: 'duvet',    libelle: 'Un joli duvet' },
+  { cle: 'crinière', libelle: 'Une vraie tignasse' }
 ];
 
 /* La patate : l'option pour rire. Cote absurde, et elle bloque tout le
@@ -95,8 +116,9 @@ function stvNormalise(o) {
 /* Cotes lisibles : entières au-dessus de 4, une décimale en dessous. La
    valeur arrondie est celle qui est enregistrée et qui paie, pour que
    l'affichage et le gain ne puissent jamais diverger. */
-function stvCote(cfg, p) {
-  var v = Math.min(cfg.cote_max, Math.max(1.1, 1 / Math.max(p, 1e-6)));
+function stvCote(cfg, p, plafond) {
+  var max = plafond || cfg.cote_max;
+  var v = Math.min(max, Math.max(1.1, 1 / Math.max(p, 1e-6)));
   return v < 4 ? Math.round(v * 10) / 10 : Math.round(v);
 }
 
@@ -118,8 +140,11 @@ function stvDateVersJour(cfg, iso) {
 }
 
 function stvJourVersDate(cfg, jour) {
+  var n = Number(jour);
+  if (!isFinite(n)) return cfg.terme;          // garde-fou : jamais de date invalide
   var b = new Date(cfg.terme + 'T12:00:00Z');
-  b.setUTCDate(b.getUTCDate() + jour);
+  if (isNaN(b.getTime())) return cfg.terme;
+  b.setUTCDate(b.getUTCDate() + n);
   return b.toISOString().slice(0, 10);
 }
 
@@ -160,17 +185,66 @@ function stvLoiSexe(cfg) {
 }
 
 /**
- * La date. Gaussienne ASYMÉTRIQUE autour du terme : l'étalement avant est
- * bien plus large que l'étalement après, parce qu'on peut accoucher trois
- * semaines en avance mais qu'au-delà de quelques jours de dépassement,
- * l'équipe médicale déclenche. Le mode est placé légèrement avant le terme.
+ * La date. Plus de gaussienne : on part des fréquences réelles par semaine
+ * d'aménorrhée, lues dans l'onglet Config (clé date_semaines), au format
+ * « offset:pourcentage » séparé par des barres verticales.
+ *
+ * Le passage de la semaine au jour se fait en trois temps : densité plate
+ * dans chaque semaine, puis deux lissages [1,2,1] pour effacer l'escalier,
+ * puis recalage de chaque semaine sur son total d'origine. Le lissage rend
+ * la courbe crédible jour par jour sans jamais déformer les totaux réels.
  */
-function stvLoiDate(cfg) {
-  var p = {};
-  for (var g = cfg.date_min; g <= cfg.date_max; g++) {
-    var sd = (g <= cfg.date_mu) ? cfg.date_sd_avant : cfg.date_sd_apres;
-    p[g] = stvBande(g - 0.5, g + 0.5, cfg.date_mu, sd);
+function stvSemaines(cfg) {
+  var out = [];
+  String(cfg.date_semaines || '').split('|').forEach(function (bloc) {
+    var p = bloc.split(':');
+    if (p.length === 2 && p[0].trim() !== '') {
+      out.push({ debut: Number(p[0]), part: Number(p[1]) });
+    }
+  });
+  out.sort(function (a, b) { return a.debut - b.debut; });
+  for (var i = 0; i < out.length; i++) {
+    out[i].fin = (i + 1 < out.length) ? out[i + 1].debut - 1 : cfg.date_max;
   }
+  return out;
+}
+
+function stvLisser(p, cfg) {
+  var q = {};
+  for (var g = cfg.date_min; g <= cfg.date_max; g++) {
+    var a = p[g - 1] === undefined ? p[g] : p[g - 1];
+    var b = p[g + 1] === undefined ? p[g] : p[g + 1];
+    q[g] = (a + 2 * p[g] + b) / 4;
+  }
+  return q;
+}
+
+function stvLoiDate(cfg) {
+  var sem = stvSemaines(cfg), p = {}, g, i;
+
+  for (i = 0; i < sem.length; i++) {
+    var d0 = Math.max(sem[i].debut, cfg.date_min);
+    var d1 = Math.min(sem[i].fin, cfg.date_max);
+    var n = d1 - d0 + 1;
+    if (n <= 0) continue;
+    for (g = d0; g <= d1; g++) p[g] = sem[i].part / n;
+  }
+  for (g = cfg.date_min; g <= cfg.date_max; g++) if (p[g] === undefined) p[g] = 0;
+
+  for (i = 0; i < 2; i++) p = stvLisser(p, cfg);
+
+  // Recalage : chaque semaine retrouve exactement son pourcentage d'origine.
+  for (i = 0; i < sem.length; i++) {
+    var a = Math.max(sem[i].debut, cfg.date_min);
+    var b = Math.min(sem[i].fin, cfg.date_max);
+    if (b < a) continue;
+    var somme = 0;
+    for (g = a; g <= b; g++) somme += p[g];
+    if (somme <= 0) continue;
+    var k = sem[i].part / somme;
+    for (g = a; g <= b; g++) p[g] *= k;
+  }
+
   return stvNormalise(p);
 }
 
@@ -197,7 +271,7 @@ function stvLoiTaille(cfg, sexe) {
 }
 
 function stvLoiLettre(cfg, sexe) {
-  var src = STV_LETTRES[sexe] || STV_LETTRES.G, c = {};
+  var src = STV_LETTRES[sexe] || STV_LETTRES.X, c = {};
   for (var k in src) c[k] = src[k];
   return stvNormalise(c);
 }
@@ -299,9 +373,9 @@ function stvCalculer(cfg, r) {
     date:      stvLoiDate(cfg),
     poids:     stvLoiPoids(cfg, sexe),
     taille:    stvLoiTaille(cfg, sexe),
-    lettre:    stvLoiLettre(cfg, sexe),
+    lettre:    stvLoiLettre(cfg, r.sexe === 'F' || r.sexe === 'G' ? r.sexe : 'X'),
     heure:     stvLoiHeure(),
-    ascendant: stvLoiAscendant(cfg, r.date || stvJourVersDate(cfg, cfg.date_mu), r.heure),
+    ascendant: stvLoiAscendant(cfg, r.date || cfg.terme, r.heure),
     chevelu:   stvLoiCoupe(cfg)
   };
 
@@ -328,11 +402,17 @@ function stvCalculer(cfg, r) {
   return { lois: lois, cotes: cotes, sexeUtilise: sexe, patate: patate };
 }
 
-function stvCotesOptions(cfg, loi) {
+function stvCotesOptions(cfg, loi, plafond) {
   var out = {};
-  for (var k in loi) out[k] = stvCote(cfg, loi[k]);
+  for (var k in loi) out[k] = stvCote(cfg, loi[k], plafond);
   return out;
 }
+
+/* Un seul plafond pour tout le jeu, dans l'onglet Config. Il doit rester
+   assez haut pour que les réponses rares ne se retrouvent pas toutes à la
+   même valeur : avec un plafond à 40, les deux extrêmes du poids cotaient
+   40 toutes les deux, ce qui gommait la différence entre « improbable » et
+   « très improbable ». */
 
 /* Score final : tout ou rien, la mise multipliée par la cote figée au pari. */
 function stvScore(prono, resultat) {

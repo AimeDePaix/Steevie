@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Steevie — console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="admin">
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Console</p>
+    <h1>Steevie</h1>
+  </header>
+
+  <!-- clé d'accès -->
+  <section id="s-cle">
+    <h2>Clé d'accès</h2>
+    <p class="sub">Cette console pilote le jeu. Garde le lien pour toi.</p>
+    <input type="password" id="cle" placeholder="clé admin" autocomplete="off">
+    <button class="cta" id="btn-cle" style="margin-top:12px">Entrer</button>
+    <p class="error hidden" id="cle-err"></p>
+  </section>
+
+  <!-- état du jeu -->
+  <section id="s-etat" class="hidden">
+    <h2>État du jeu</h2>
+    <div class="stats" id="stats"></div>
+
+    <label class="q" style="margin-top:22px">Phase</label>
+    <div class="chips" id="phases"></div>
+    <p class="note" id="phase-note"></p>
+  </section>
+
+  <!-- saisie du résultat -->
+  <section id="s-resultat" class="hidden">
+    <h2>Le résultat réel</h2>
+    <p class="sub">Renseigne ce qu'il s'est vraiment passé. Rien n'est publié
+      tant que la phase n'est pas sur « révélé ».</p>
+    <div id="champs-resultat"></div>
+    <button class="cta" id="btn-resultat" style="margin-top:18px">Enregistrer le résultat</button>
+    <p class="note" id="resultat-msg"></p>
+  </section>
+
+  <!-- bilan -->
+  <section id="s-bilan" class="hidden">
+    <h2>Le bilan</h2>
+    <p class="sub" id="bilan-sub"></p>
+    <button class="cta ghost" id="btn-bilan">Calculer le classement</button>
+    <div id="bilan"></div>
+  </section>
+
+  <!-- envoi -->
+  <section id="s-envoi" class="hidden">
+    <h2>Le faire-part</h2>
+    <p class="sub">Chaque joueur reçoit l'annonce, son rang, son score et le
+      détail de ce qu'il avait trouvé. Envoie-toi toujours un test d'abord.</p>
+    <div class="actions">
+      <button class="cta ghost" id="btn-test">M'envoyer un test</button>
+      <button class="cta" id="btn-tous">Envoyer à tous</button>
+    </div>
+    <p class="note" id="envoi-msg"></p>
+  </section>
+
+  <footer>Console privée</footer>
+</div>
+
+<script src="config.js"></script>
+<script src="modele.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

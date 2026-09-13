@@ -93,6 +93,8 @@ h2 {
   line-height: 1.3;
 }
 
+.accroche.petite { font-size: 21px; margin-top: 22px; }
+
 .signature {
   margin: 22px 0 0;
   font-family: var(--display);
@@ -216,8 +218,31 @@ input[type=text], input[type=date], input[type=email], input[type=time], select 
   font-size: 20px;
 }
 .parent .mesures { font: 400 13px/1.5 var(--mono); color: var(--ink-soft); }
-.parent.cache .photo img { filter: blur(14px) saturate(.5); }
+.parent.cache .photo img { filter: blur(16px) saturate(.4); }
 .parent.cache .mesures { visibility: hidden; }
+.parents.voilees { opacity: .6; }
+.parents { transition: opacity .4s; }
+
+.legende-parents {
+  margin: 14px 0 20px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.merci {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+.merci-titre {
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 60, "WONK" 1;
+  font-weight: 600;
+  font-size: 21px;
+}
+.merci p { margin: 0 0 10px; font-size: 15px; color: var(--ink-soft); }
 
 .quizq { margin-bottom: 20px; }
 .quizq .verdict { font-size: 14px; margin-top: 8px; }
@@ -285,76 +310,88 @@ input[type=text], input[type=date], input[type=email], input[type=time], select 
 }
 .chips.lettres .chip { min-width: 0; flex: 1 0 12%; padding: 9px 2px 19px; }
 
-/* --- jauge horizontale du poids ----------------------------------------- */
+/* --- curseurs glissants ------------------------------------------------- */
 
-.jauge-h { display: flex; gap: 2px; height: 62px; }
-.jauge-h .seg {
-  flex: 1;
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
-  padding: 0;
-  position: relative;
-  background: color-mix(in srgb, #7FB2C8 calc((1 - var(--t)) * 100%), #C4522F);
-  opacity: .5;
-  transition: opacity .15s, transform .15s;
+.curseur { position: relative; height: 46px; display: flex; align-items: center; }
+
+.curseur .piste {
+  position: absolute; left: 0; right: 0; height: 26px;
+  border-radius: 20px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .18);
 }
-.jauge-h .seg:hover { opacity: .8; }
-.jauge-h .seg.sel { opacity: 1; transform: scaleY(1.14); box-shadow: 0 0 0 2px var(--ink); }
-.jauge-h .seg-cote {
-  position: absolute; left: 0; right: 0; bottom: 5px;
-  font: 500 10px/1 var(--mono);
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+.curseur.poids .piste {
+  background: linear-gradient(90deg, #E23B2E 0%, #F07C1F 26%, #F2C43B 52%, #A8CE3A 76%, #2FA84F 100%);
 }
+.curseur.taille .piste {
+  background: linear-gradient(90deg, #8FC3DE 0%, #5FA8C9 34%, #3F86AE 68%, #2A6389 100%);
+}
+.curseur.vierge .piste { filter: saturate(.35); }
+
+.curseur .pastille-c {
+  position: absolute; top: 50%;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 5px solid var(--ink);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .28);
+  transition: left .1s linear;
+  pointer-events: none;
+}
+.curseur.vierge .pastille-c { border-color: var(--ink-soft); opacity: .7; }
+
+/* Le vrai input reste au-dessus, invisible : il apporte le glissement, le
+   clavier et l'accessibilité, pendant que la pastille fait le spectacle. */
+.curseur input[type=range] {
+  position: relative; z-index: 2;
+  width: 100%; margin: 0; height: 46px;
+  background: none; opacity: 0;
+  -webkit-appearance: none; appearance: none;
+  cursor: grab;
+}
+.curseur input[type=range]:active { cursor: grabbing; }
+.curseur input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 42px; height: 42px;
+}
+.curseur input[type=range]:focus-visible + .piste { outline: 2px solid var(--ink); }
+
 .jauge-bornes {
   display: flex; justify-content: space-between;
   margin-top: 8px;
   font: 400 12px/1.3 var(--body);
   color: var(--ink-soft);
 }
-.jauge-choix {
-  margin-top: 12px;
+
+.choix-ligne {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; margin-top: 12px;
+}
+.choix-val {
   font-family: var(--display);
   font-variation-settings: "SOFT" 50;
   font-weight: 600;
   font-size: 21px;
 }
+.choix-cote { font: 400 13px/1 var(--mono); color: var(--ink-soft); }
 
-/* --- jauge verticale de la taille --------------------------------------- */
+/* --- taille : curseur et bébé côte à côte ------------------------------- */
 
-.jauge-v-wrap { display: flex; gap: 18px; align-items: stretch; }
-.jauge-v { flex: 0 0 152px; display: flex; flex-direction: column; gap: 3px; }
-.jauge-v .pal {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 7px 10px;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  background: transparent;
-  font: 400 14px/1 var(--body);
-  color: var(--ink);
-  cursor: pointer;
-}
-.jauge-v .pal:hover { border-color: var(--ink-soft); }
-.jauge-v .pal.sel { background: var(--ink); border-color: var(--ink); color: var(--card); }
-.jauge-v .pal-cote { font: 400 11px/1 var(--mono); color: var(--ink-soft); }
-.jauge-v .pal.sel .pal-cote { color: rgba(255, 255, 255, .74); }
-
+.taille-wrap { display: flex; gap: 16px; align-items: flex-start; }
+.taille-gauche { flex: 1; min-width: 0; }
 .bebe-box {
-  flex: 1;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: flex-end;
+  flex: 0 0 96px;
+  display: flex; align-items: flex-end; justify-content: center;
+  height: 150px;
   background: var(--paper);
   border-radius: 3px;
-  padding: 12px;
+  padding: 8px;
 }
-.bebe { width: 100%; display: flex; justify-content: center; align-items: flex-end; }
+.bebe { display: flex; align-items: flex-end; }
 .bebe svg {
-  height: calc(var(--k) * 168px);
+  height: calc(var(--k) * 132px);
   width: auto;
-  transition: height .3s cubic-bezier(.2, .8, .3, 1);
+  transition: height .25s cubic-bezier(.2, .8, .3, 1);
 }
-.bebe-lab { margin-top: 8px; font: 500 13px/1 var(--mono); color: var(--ink-soft); }
 
 /* --- horloge ------------------------------------------------------------ */
 
@@ -371,18 +408,6 @@ input[type=text], input[type=date], input[type=email], input[type=time], select 
   text-anchor: middle; fill: var(--ink);
 }
 .h-sous { font: 400 11px var(--mono); text-anchor: middle; fill: var(--ink-soft); }
-
-/* --- outil ascendant ---------------------------------------------------- */
-
-.outil { margin: 10px 0 4px; }
-.outil summary {
-  cursor: pointer;
-  font-size: 14.5px;
-  color: var(--ink-soft);
-  text-decoration: underline;
-}
-.outil-corps { padding: 14px 0 4px; }
-.asc-res { margin: 12px 0 0; font-size: 15px; }
 
 /* --- mise --------------------------------------------------------------- */
 
@@ -478,9 +503,203 @@ footer {
 }
 
 @media (max-width: 460px) {
-  .jauge-v-wrap { gap: 12px; }
-  .jauge-v { flex-basis: 130px; }
+  .taille-wrap { gap: 10px; }
+  .bebe-box { flex-basis: 76px; height: 130px; }
   .parents { gap: 8px; }
+  .choix-ligne { flex-direction: column; gap: 2px; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+
+/* ============================================================================
+   Liste de naissance
+   ============================================================================ */
+
+.apercu {
+  margin-top: 22px; padding: 12px 14px;
+  background: #FBF2D8;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+  font-size: 14px;
+}
+
+.filtres { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+.filtre {
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  background: transparent;
+  font: 400 14px/1 var(--body);
+  color: var(--ink);
+  cursor: pointer;
+}
+.filtre:hover { border-color: var(--ink-soft); }
+.filtre.actif { background: var(--ink); border-color: var(--ink); color: var(--card); }
+
+.cadeau {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.cadeau:last-child { border-bottom: none; }
+
+.cadeau-vignette {
+  flex: 0 0 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper);
+  border-radius: 3px;
+  font-size: 25px;
+}
+.cadeau-corps { flex: 1; min-width: 0; }
+.cadeau-nom { font-weight: 500; font-size: 15.5px; }
+.cadeau-meta { font: 400 13px/1.5 var(--mono); color: var(--ink-soft); }
+
+.cadeau-btn {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  background: transparent;
+  font: 500 14px/1 var(--body);
+  color: var(--ink);
+  cursor: pointer;
+}
+.cadeau-btn:hover { background: var(--ink); color: var(--card); }
+.cadeau-btn:disabled { opacity: .45; cursor: default; background: transparent; color: var(--ink); }
+
+.cadeau-etat {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--paper);
+  font: 500 12px/1.5 var(--body);
+  color: var(--ink-soft);
+}
+.cadeau.pris .cadeau-vignette { filter: grayscale(1); opacity: .5; }
+.cadeau.pris .cadeau-nom { color: var(--ink-soft); text-decoration: line-through; }
+
+.jauge-liste { margin-top: 26px; }
+.jauge-liste-piste { height: 8px; background: var(--paper); border-radius: 20px; overflow: hidden; }
+.jauge-liste-remplie {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #B8862C);
+  transition: width .4s ease;
+}
+.jauge-liste-txt { margin: 8px 0 0; font: 400 13px/1 var(--mono); color: var(--ink-soft); }
+
+
+/* ============================================================================
+   Graduations et poids figuré
+   ============================================================================ */
+
+.gradus { position: relative; height: 26px; margin-top: 4px; }
+.gradu { position: absolute; transform: translateX(-50%); text-align: center; }
+.gradu i { display: block; width: 1px; height: 6px; background: var(--rule); margin: 0 auto; }
+.gradu.muet i { height: 3px; }
+.gradu em {
+  display: block;
+  margin-top: 3px;
+  font: 400 10px/1 var(--mono);
+  font-style: normal;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.choix-ligne.avec-icone { align-items: center; }
+.icone-poids {
+  flex: 0 0 auto;
+  display: flex; align-items: flex-end;
+  width: 40px; height: 44px;
+  color: var(--ink);
+  margin-right: 4px;
+}
+.icone-poids svg {
+  height: calc(var(--p) * 44px);
+  width: auto;
+  transition: height .25s cubic-bezier(.2, .8, .3, 1);
+}
+
+/* ============================================================================
+   Livre d'or
+   ============================================================================ */
+
+.champ-mot { margin-bottom: 8px; }
+textarea {
+  width: 100%;
+  padding: 13px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--card);
+  font: 400 16px/1.55 var(--body);
+  color: var(--ink);
+  resize: vertical;
+}
+.compteur {
+  margin-top: 6px;
+  text-align: right;
+  font: 400 12px/1 var(--mono);
+  color: var(--ink-soft);
+}
+
+.mot {
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  background: var(--paper);
+  border-radius: 3px;
+  border-left: 3px solid var(--rule);
+}
+.mot.moi { border-left-color: var(--accent); background: #FBF2D8; }
+.mot-texte {
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 40, "opsz" 14;
+  font-size: 16.5px;
+  line-height: 1.6;
+}
+.mot-sign {
+  margin-top: 10px;
+  font: 500 13px/1 var(--mono);
+  color: var(--ink-soft);
+  display: flex; justify-content: space-between;
+}
+.mot-date { opacity: .7; }
+
+/* ============================================================================
+   Console
+   ============================================================================ */
+
+body.admin { --paper: #E4E7EA; }
+
+.stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.stat {
+  flex: 1 1 40%;
+  padding: 14px;
+  background: var(--paper);
+  border-radius: 3px;
+}
+.stat-v {
+  display: block;
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 40;
+  font-weight: 600;
+  font-size: 27px;
+  line-height: 1.1;
+}
+.stat-t { font: 400 12px/1.4 var(--mono); color: var(--ink-soft); }
+
+.champ-admin { margin-bottom: 16px; }
+.champ-admin select {
+  width: 100%;
+  padding: 13px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--card);
+  font: 400 17px/1 var(--body);
+  color: var(--ink);
+}
+
+.bar { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.bar .lab { flex: 0 0 120px; font: 400 13px/1.3 var(--mono); text-align: right; color: var(--ink-soft); }
+.bar .track { flex: 1; height: 18px; background: var(--paper); border-radius: 2px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--accent); transition: width .35s ease; }
+.bar .n { flex: 0 0 24px; font: 400 12px/1 var(--mono); color: var(--ink-soft); }
