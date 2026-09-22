@@ -141,7 +141,11 @@ function libelleReponse(cfg, cle, v) {
     if (v === 'P') return 'Une pomme de terre';
     return v === 'F' ? 'Une fille' : 'Un garçon';
   }
-  if (cle === 'date')    return frDate(v);
+  if (cle === 'date') {
+    if (v === 'avant') return 'Avant le ' + frDate(stvJourVersDate(cfg, cfg.date_min));
+    if (v === 'apres') return 'Le ' + frDate(stvJourVersDate(cfg, cfg.date_max + 1)) + ' ou après';
+    return frDate(v);
+  }
   if (cle === 'chevelu') {
     for (var i = 0; i < STV_COUPE.length; i++) {
       if (STV_COUPE[i].cle === v) return STV_COUPE[i].libelle;
@@ -150,7 +154,11 @@ function libelleReponse(cfg, cle, v) {
   if (cle === 'poids')  return chercheLibelle(stvTranchesPoids(cfg), v);
   if (cle === 'taille') return chercheLibelle(stvTranchesTaille(cfg), v);
   if (cle === 'lettre') return 'Un prénom en ' + v;
-  if (cle === 'heure')  return 'Entre ' + v.replace('-', ' et ');
+  if (cle === 'heure') {
+    for (var j = 0; j < STV_CRENEAUX.length; j++) {
+      if (STV_CRENEAUX[j].cle === v) return 'Entre ' + STV_CRENEAUX[j].libelle.replace(' – ', ' et ');
+    }
+  }
   return String(v);
 }
 

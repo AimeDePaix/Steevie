@@ -3,6 +3,7 @@
    ============================================================================ */
 
 var TOKEN = new URLSearchParams(location.search).get('t') || '';
+stvNav('autres');
 var CFG = null, MOI = '';
 
 var $ = function (id) { return document.getElementById(id); };
@@ -11,7 +12,6 @@ var show = function (id, on) { $(id).classList.toggle('hidden', !on); };
 var retour = 'index.html' + (TOKEN ? '?t=' + encodeURIComponent(TOKEN) : '');
 $('lien-retour').href = retour;
 $('lien-retour2').href = retour;
-$('lien-liste').href = 'liste.html' + (TOKEN ? '?t=' + encodeURIComponent(TOKEN) : '');
 
 fetch(API + '?action=board&t=' + encodeURIComponent(TOKEN))
   .then(function (r) { return r.json(); })
@@ -58,13 +58,20 @@ function tableau(entries, revele) {
     h += '<tr' + (e.pseudo === MOI ? ' class="moi"' : '') + '>'
       + '<td class="pseudo">' + echappe(e.pseudo) + '</td>'
       + '<td>' + pastilleSexe(r.sexe) + '</td>'
-      + '<td class="num">' + (patate ? '—' : (r.date ? courteDate(r.date) : '—')) + '</td>'
+      + '<td class="num">' + (patate ? '—' : jourLisible(r.date)) + '</td>'
       + '<td class="num">' + (patate ? '—' : (r.poids ? lib(trP, r.poids) : '—')) + '</td>'
       + '<td class="num">' + (patate ? '—' : (r.taille ? lib(trT, r.taille) : '—')) + '</td>'
       + '</tr>';
   });
 
   $('tableau').innerHTML = h + '</tbody></table></div>';
+}
+
+function jourLisible(v) {
+  if (!v) return '—';
+  if (v === 'avant') return 'avant le ' + courteDate(stvJourVersDate(CFG, CFG.date_min));
+  if (v === 'apres') return courteDate(stvJourVersDate(CFG, CFG.date_max + 1)) + ' ou après';
+  return courteDate(v);
 }
 
 function pastilleSexe(v) {
@@ -111,7 +118,10 @@ function jolieDate(iso) {
   return Number(p[2]) + ' ' + MOIS[Number(p[1]) - 1] + ' ' + p[0];
 }
 
+var MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
+                   'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
 function courteDate(iso) {
   var p = String(iso).split('-');
-  return Number(p[2]) + ' ' + MOIS[Number(p[1]) - 1].slice(0, 4);
+  return Number(p[2]) + ' ' + MOIS_COURTS[Number(p[1]) - 1];
 }

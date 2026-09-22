@@ -1,32 +1,43 @@
 /* ============================================================================
-   nav.js — la barre de navigation, commune à toutes les pages
+   nav.js — la barre de navigation, commune aux pages du jeu
    ----------------------------------------------------------------------------
-   Chaque page pose un <div id="nav"></div> et charge ce fichier. Le jeton
-   voyage d'une page à l'autre pour que personne n'ait à le retaper.
+   La barre n'apparaît qu'une fois les indices terminés. Avant la validation
+   des pronostics, les onglets 3 à 6 restent verrouillés. Chaque page appelle
+   stvNav(onglet actif) ; le niveau atteint est mémorisé par app.js.
    ============================================================================ */
 
-(function () {
-  var t = new URLSearchParams(location.search).get('t') || '';
-  var q = t ? '?t=' + encodeURIComponent(t) : '';
-  var page = (location.pathname.split('/').pop() || 'index.html');
-  var vue = new URLSearchParams(location.search).get('vue') || '';
-
-  var liens = [
-    { l: 'Les règles',    h: 'index.html' + (t ? q + '&vue=regles' : '?vue=regles'), a: page === 'index.html' && vue === 'regles' },
-    { l: 'Mes pronos',    h: 'index.html' + (t ? q + '&vue=pronos' : ''),            a: page === 'index.html' && vue !== 'regles' && vue !== 'ticket' },
-    { l: 'Mon ticket',    h: 'index.html' + (t ? q + '&vue=ticket' : ''),            a: page === 'index.html' && vue === 'ticket' },
-    { l: 'Les autres',    h: 'pronos.html' + q,                                      a: page === 'pronos.html' },
-    { l: 'Un mot',        h: 'mots.html' + q,                                        a: page === 'mots.html' },
-    { l: 'Liste de naissance', h: 'liste.html' + q,                                  a: page === 'liste.html' }
-  ];
-
+function stvNav(actif) {
   var cible = document.getElementById('nav');
   if (!cible) return;
-  if (!t) return;   // sans jeton, aucune navigation n'est proposée
+
+  var t = new URLSearchParams(location.search).get('t') || '';
+  if (!t) { cible.innerHTML = ''; return; }
+
+  var niveau = '';
+  try { niveau = localStorage.getItem('steevie-niveau-' + t) || ''; } catch (e) {}
+
+  // Pas de navigation tant que les indices ne sont pas faits.
+  if (niveau !== 'pronos' && niveau !== 'fini') { cible.innerHTML = ''; return; }
+
+  var q = '?t=' + encodeURIComponent(t);
+  var fini = (niveau === 'fini');
+
+  var onglets = [
+    { id: 'regles', n: 1, l: 'Les règles du jeu',        h: 'index.html' + q + '&vue=regles', ouvert: true },
+    { id: 'pronos', n: 2, l: 'Mon formulaire de pronos', h: 'index.html' + q + '&vue=pronos', ouvert: true },
+    { id: 'ticket', n: 3, l: 'Ticket récap Steevamax',   h: 'index.html' + q + '&vue=ticket', ouvert: fini },
+    { id: 'autres', n: 4, l: 'Pronos des autres',        h: 'pronos.html' + q,                ouvert: fini },
+    { id: 'mots',   n: 5, l: 'Un petit mot pour nous',   h: 'mots.html' + q,                  ouvert: fini },
+    { id: 'liste',  n: 6, l: 'Liste de naissance',       h: 'liste.html' + q,                 ouvert: fini }
+  ];
 
   cible.innerHTML = '<nav class="barre"><div class="barre-in">'
-    + liens.map(function (x) {
-        return '<a class="onglet' + (x.a ? ' actif' : '') + '" href="' + x.h + '">' + x.l + '</a>';
+    + onglets.map(function (o) {
+        var cls = 'onglet' + (o.id === actif ? ' actif' : '') + (o.ouvert ? '' : ' verrou');
+        var titre = o.ouvert ? '' : ' title="Valide d\'abord tes pronostics"';
+        return o.ouvert
+          ? '<a class="' + cls + '" href="' + o.h + '"><span class="n">' + o.n + '</span>' + o.l + '</a>'
+          : '<span class="' + cls + '"' + titre + '><span class="n">' + o.n + '</span>' + o.l + '</span>';
       }).join('')
     + '</div></nav>';
-})();
+}

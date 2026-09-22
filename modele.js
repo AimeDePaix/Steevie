@@ -134,7 +134,7 @@ function stvFmtCote(v) {
    ============================================================================ */
 
 function stvDateVersJour(cfg, iso) {
-  if (!iso) return null;
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) return null;
   var a = new Date(iso + 'T12:00:00Z'), b = new Date(cfg.terme + 'T12:00:00Z');
   return Math.round((a - b) / 86400000);
 }
@@ -227,14 +227,16 @@ function stvLoiSexe(cfg) {
 }
 
 /**
- * La date. Plus de gaussienne : on part des fréquences réelles par semaine
- * d'aménorrhée, lues dans l'onglet Config (clé date_semaines), au format
- * « offset:pourcentage » séparé par des barres verticales.
+ * La date. Trois morceaux :
+ *   « avant » : une case unique pour tout ce qui précède la fenêtre (avant 37 SA)
+ *   les jours de la fenêtre, un par un, de 37 SA à 41 SA + 6
+ *   « apres » : une case unique pour le terme très dépassé (42 SA et plus)
  *
- * Le passage de la semaine au jour se fait en trois temps : densité plate
- * dans chaque semaine, puis deux lissages [1,2,1] pour effacer l'escalier,
- * puis recalage de chaque semaine sur son total d'origine. Le lissage rend
- * la courbe crédible jour par jour sans jamais déformer les totaux réels.
+ * Les fréquences viennent des statistiques françaises, par semaine
+ * d'aménorrhée, dans l'onglet Config (date_semaines, date_avant, date_apres).
+ * Dans la fenêtre, on passe de la semaine au jour par un lissage suivi d'un
+ * recalage : la courbe est douce jour par jour, et chaque semaine garde
+ * exactement son total d'origine.
  */
 function stvSemaines(cfg) {
   var out = [];
@@ -267,15 +269,13 @@ function stvLoiDate(cfg) {
   for (i = 0; i < sem.length; i++) {
     var d0 = Math.max(sem[i].debut, cfg.date_min);
     var d1 = Math.min(sem[i].fin, cfg.date_max);
-    var n = d1 - d0 + 1;
-    if (n <= 0) continue;
-    for (g = d0; g <= d1; g++) p[g] = sem[i].part / n;
+    if (d1 < d0) continue;
+    for (g = d0; g <= d1; g++) p[g] = sem[i].part / (d1 - d0 + 1);
   }
   for (g = cfg.date_min; g <= cfg.date_max; g++) if (p[g] === undefined) p[g] = 0;
 
   for (i = 0; i < 2; i++) p = stvLisser(p, cfg);
 
-  // Recalage : chaque semaine retrouve exactement son pourcentage d'origine.
   for (i = 0; i < sem.length; i++) {
     var a = Math.max(sem[i].debut, cfg.date_min);
     var b = Math.min(sem[i].fin, cfg.date_max);
@@ -283,15 +283,30 @@ function stvLoiDate(cfg) {
     var somme = 0;
     for (g = a; g <= b; g++) somme += p[g];
     if (somme <= 0) continue;
-    var k = sem[i].part / somme;
-    for (g = a; g <= b; g++) p[g] *= k;
+    for (g = a; g <= b; g++) p[g] *= sem[i].part / somme;
   }
 
-  return stvNormalise(p);
+  var out = { avant: Number(cfg.date_avant) || 0 };
+  for (g = cfg.date_min; g <= cfg.date_max; g++) out[String(g)] = p[g];
+  out.apres = Number(cfg.date_apres) || 0;
+  return stvNormalise(out);
 }
 
-/* L'arrondi à la centaine décale les frontières de 50 g : la tranche qui
-   commence à 3 000 g attrape en réalité tout ce qui pèse 2 950 g et plus. */
+/* La clé d'une réponse de date : « avant », « apres », ou l'écart en jours. */
+function stvCleDate(cfg, v) {
+  if (!v) return null;
+  if (v === 'avant' || v === 'apres') return v;
+  var j = stvDateVersJour(cfg, v);
+  return (j === null || !isFinite(j)) ? null : String(j);
+}
+
+/* Une date réelle, pour l'astronomie, même quand on a parié sur une case balai. */
+function stvDateReelle(cfg, v) {
+  if (v === 'avant') return stvJourVersDate(cfg, cfg.date_min - 1);
+  if (v === 'apres') return stvJourVersDate(cfg, cfg.date_max + 1);
+  return v || cfg.terme;
+}
+
 function stvLoiPoids(cfg, sexe) {
   var mu = cfg['poids_moyen_' + sexe] + stvBorne(cfg.ajust_poids, cfg.ajust_poids_max);
   var sd = cfg.poids_sd, p = {}, i;
@@ -355,6 +370,7 @@ function stvJourJulien(annee, mois, jour, heureUTC) {
 }
 
 function stvSigneSolaire(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) return '';
   var p = iso.split('-');
   var jd = stvJourJulien(Number(p[0]), Number(p[1]), Number(p[2]), 12);
   var n = jd - 2451545.0;
@@ -425,13 +441,13 @@ function stvCalculer(cfg, r) {
     taille:    stvLoiTaille(cfg, sexe),
     lettre:    stvLoiLettre(cfg, r.sexe === 'F' || r.sexe === 'G' ? r.sexe : 'X'),
     heure:     stvLoiHeure(),
-    ascendant: stvLoiAscendant(cfg, r.date || cfg.terme, r.heure),
+    ascendant: stvLoiAscendant(cfg, stvDateReelle(cfg, r.date), r.heure),
     chevelu:   stvLoiCoupe(cfg)
   };
 
   var choix = {
     sexe: r.sexe,
-    date: (r.date ? String(stvDateVersJour(cfg, r.date)) : null),
+    date: stvCleDate(cfg, r.date),
     poids: r.poids, taille: r.taille, lettre: r.lettre,
     heure: r.heure, ascendant: r.ascendant, chevelu: r.chevelu
   };

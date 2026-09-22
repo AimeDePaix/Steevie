@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Steevie — pronostics</title>
+<title>Accès personnel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,19 +14,18 @@
 <body>
 <div class="wrap">
 
+  <!-- En-tête et navigation : cachés tant que la personne n'est pas identifiée -->
   <header id="entete" class="hidden">
     <p class="eyebrow">Les pronostics de</p>
     <h1>Steevie</h1>
   </header>
 
   <div id="nav"></div>
+  <div id="progression" class="progression hidden"></div>
 
-  <!-- ============================================== chargement -->
   <section id="s-load"><p class="sub" style="margin:0">Un instant…</p></section>
 
-  <!-- ============================================== sans lien -->
-  <!-- Volontairement nue : ni texte du jeu, ni navigation, ni lien sortant.
-       Quelqu'un qui arrive ici sans jeton ne doit rien apprendre. -->
+  <!-- ====================================== sans lien : volontairement nue -->
   <section id="s-accueil" class="hidden nue">
     <p class="sub" style="margin-bottom:18px">Cette page s'ouvre avec un lien
       personnel. Si tu en avais un, saisis l'adresse qui l'a reçu.</p>
@@ -35,8 +34,8 @@
     <p class="note" id="resend-msg"></p>
   </section>
 
-  <!-- ============================================== pseudo -->
-  <section id="s-pseudo" class="hidden">
+  <!-- ====================================== étape 1 : le mot des parents -->
+  <section id="s-bienvenue" class="hidden">
     <p class="accroche">Qui est Steevie ?</p>
 
     <p>Malgré des mois à le fréquenter jour et nuit, nous savons finalement sur
@@ -53,61 +52,53 @@
       peut-être le bavoir porté par Steevie lors de son premier biberon.</p>
 
     <p class="accroche petite">Prêt ? Place au jeu !</p>
-
     <p class="signature">Eve-Ma &amp; Max</p>
 
-    <div class="sep"></div>
+    <button class="cta" id="btn-bienvenue" style="margin-top:24px">C'est parti</button>
+  </section>
 
+  <!-- ====================================== étape 2 : le pseudo -->
+  <section id="s-pseudo" class="hidden">
     <h2 id="hello"></h2>
-    <p class="sub">Choisis le nom sous lequel tu apparaîtras dans le tableau
-      des pronostics. Il doit permettre aux autres de te reconnaître : ton
-      prénom suffit, un surnom que toute la famille connaît fait l'affaire.
-      Évite l'anonymat complet, c'est moins drôle au moment du classement.</p>
-    <div style="margin-bottom:16px">
-      <label class="q" for="pseudo">Ton pseudo</label>
-      <input type="text" id="pseudo" maxlength="14" placeholder="14 caractères maximum">
-    </div>
-    <button class="cta" id="btn-pseudo">C'est parti</button>
+    <p class="sub">Choisis le nom sous lequel tu apparaîtras dans le tableau des
+      pronostics. Il doit permettre aux autres de te reconnaître : ton prénom
+      suffit, un surnom que toute la famille connaît fait l'affaire.</p>
+    <label class="q" for="pseudo">Ton pseudo</label>
+    <input type="text" id="pseudo" maxlength="14" placeholder="14 caractères maximum">
+    <button class="cta" id="btn-pseudo" style="margin-top:16px">Valider mon pseudo</button>
     <p class="error hidden" id="pseudo-err"></p>
   </section>
 
-  <!-- ============================================== encart 1 : les règles -->
+  <!-- ====================================== étape 3 : les règles -->
   <section id="s-regles" class="hidden">
-    <h2>Comment on joue</h2>
-    <p class="sub">Ça vaut le coup de lire, ce n'est pas complètement
-      intuitif la première fois.</p>
+    <h2>Les règles du jeu</h2>
+    <p class="sub">Ça vaut le coup de lire, ce n'est pas complètement intuitif
+      la première fois.</p>
 
-    <div class="regle">
-      <span class="num">1</span>
-      <div><strong>Tu reçois 100 jetons.</strong> À répartir sur huit
-        questions, par paliers de cinq. Tu peux tout mettre sur une seule
-        question ou étaler partout. Rien ne t'oblige à jouer les huit : une
-        question sur laquelle tu ne mises rien ne te rapportera simplement
-        rien.</div>
-    </div>
+    <div class="regle"><span class="num">1</span>
+      <div><strong>Tu réponds aux huit questions.</strong> Toutes, sans
+        exception : on ne peut pas valider un formulaire incomplet.</div></div>
 
-    <div class="regle">
-      <span class="num">2</span>
-      <div><strong>Chaque réponse a sa cote.</strong> Elle est inscrite
-        <em>en petit sous chaque option</em>, dans le cadre. Elle est calculée
-        automatiquement à partir des statistiques de naissance : plus la
-        réponse est improbable, plus la cote est grosse. Un garçon cote 2, un
-        bébé de 4,2 kg cote 40.</div>
-    </div>
+    <div class="regle"><span class="num">2</span>
+      <div><strong>Tu répartis 100 jetons</strong> entre ces huit questions, par
+        paliers de cinq. Tout sur une seule, ou étalé partout. Une question sans
+        jeton reste une réponse, elle ne rapporte simplement rien.</div></div>
 
-    <div class="regle">
-      <span class="num">3</span>
-      <div><strong>Points gagnés = jetons × cote.</strong> Et zéro si tu te
-        trompes, même de peu. Il n'y a pas de lot de consolation pour être
-        passé à côté d'un centimètre.</div>
-    </div>
+    <div class="regle"><span class="num">3</span>
+      <div><strong>Chaque réponse a sa cote</strong>, inscrite en petit sous chaque
+        option. Plus la réponse est improbable, plus la cote est grosse. Un garçon
+        cote 2, un bébé de plus de 4 kg cote plus de 20.</div></div>
+
+    <div class="regle"><span class="num">4</span>
+      <div><strong>Points gagnés = jetons × cote</strong>, et zéro si tu te trompes,
+        même de peu.</div></div>
 
     <div class="exemple">
       <div class="ex-titre">Un exemple</div>
-      <p>Tu places <strong>60 jetons</strong> sur « un garçon », coté 2. Et tes
-        <strong>40 jetons</strong> restants sur « 4,0 – 4,2 kg », coté 22.</p>
+      <p>Tu places <strong>60 jetons</strong> sur « un garçon », coté 2, et tes
+        <strong>40 jetons</strong> restants sur « 4,0 kg ou plus », coté 23.</p>
       <p>Garçon de 3,4 kg &rarr; <strong>120 points</strong>.<br>
-         Garçon de 4,1 kg &rarr; <strong>1 000 points</strong>.<br>
+         Garçon de 4,1 kg &rarr; <strong>1 040 points</strong>.<br>
          Fille de 3,4 kg &rarr; <strong>0 point</strong>.</p>
       <p class="ex-morale">Le prudent marque souvent peu. L'audacieux marque
         rarement beaucoup. Tout l'art est de doser.</p>
@@ -117,7 +108,7 @@
     <button class="cta" id="btn-regles" style="margin-top:20px">Compris, passons aux indices</button>
   </section>
 
-  <!-- ============================================== encart 2 : les indices -->
+  <!-- ====================================== étape 4 : les indices -->
   <section id="s-quiz" class="hidden">
     <h2>Commençons par quelques indices</h2>
     <p class="sub">À quoi ressemblaient Papa &amp; Maman à la naissance ?
@@ -137,39 +128,35 @@
         <div class="mesures" id="mes-maman"></div>
       </div>
     </div>
-    <p class="legende-parents" id="legende-parents">Beaux gosses, non ?</p>
+    <p class="legende-parents">Beaux gosses, non ?</p>
 
     <button class="cta hidden" id="btn-quiz-suite">Maintenant que tu as des indices, place aux pronos</button>
   </section>
 
-  <!-- ============================================== formulaire -->
+  <!-- ====================================== étape 5 : le formulaire -->
   <section id="s-form" class="hidden">
-    <h2>Tes pronostics</h2>
+    <h2>Mon formulaire de pronos</h2>
     <p class="sub" id="form-sub"></p>
-    <p style="margin:-12px 0 22px"><button class="link" id="btn-revoir">Revoir les règles</button></p>
     <div class="bandeau-clos hidden" id="bandeau-clos"></div>
     <div id="questions"></div>
-    <p class="error hidden" id="form-err"></p>
+    <div class="manques hidden" id="manques"></div>
   </section>
 
-  <!-- ============================================== ticket -->
+  <!-- ====================================== après validation : le ticket -->
   <section id="s-ticket" class="hidden">
-    <h2>Ton ticket</h2>
-    <p class="sub">C'est enregistré. Voici ton bulletin, à partager si le
-      cœur t'en dit.</p>
+    <h2>Ticket récap Steevamax</h2>
+    <p class="sub">C'est enregistré. Voici ton bulletin, à partager si le cœur
+      t'en dit.</p>
     <canvas id="ticket-canvas"></canvas>
     <div class="actions">
       <button class="cta" id="btn-share">Partager</button>
       <button class="cta ghost" id="btn-edit">Modifier</button>
     </div>
-    <a class="cta bloc" id="lien-pronos" href="#">Voir les pronostics de tout le monde</a>
 
     <div class="merci">
       <p class="merci-titre">Merci d'avoir joué</p>
-      <p>On vous dira tout dès que Steevie sera là, et le classement se
-        dévoilera dans la foulée.</p>
-      <a class="cta ghost bloc" id="lien-mots" href="mots.html">Laisser un mot à Steevie</a>
-      <a class="cta ghost bloc hidden" id="lien-liste" href="liste.html">Voir la liste de naissance</a>
+      <p>Tout le reste du site est maintenant ouvert : les pronostics des
+        autres, un petit mot pour nous, et bientôt la liste de naissance.</p>
     </div>
   </section>
 

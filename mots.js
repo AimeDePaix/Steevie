@@ -3,6 +3,7 @@
    ============================================================================ */
 
 var TOKEN = new URLSearchParams(location.search).get('t') || '';
+stvNav('mots');
 var MIENS = {};
 
 var $ = function (id) { return document.getElementById(id); };
@@ -23,8 +24,8 @@ fetch(API + '?action=mots&t=' + encodeURIComponent(TOKEN))
     show('s-load', false);
     if (!d.ok) {
       show('s-intro', true);
-      $('s-intro').innerHTML = '<h2>Il te faut ton lien</h2><p class="sub">Cette '
-        + 'page s\'ouvre avec le lien personnel reçu par mail.</p>';
+      $('s-intro').innerHTML = '<h2>Pas encore</h2><p class="sub">Cette page s\'ouvre '
+        + 'une fois tes pronostics validés.</p>';
       return;
     }
     MIENS = d.miens || {};
