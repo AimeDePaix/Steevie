@@ -14,21 +14,34 @@
 <body>
 <div class="wrap">
 
-  <header>
+  <header id="entete" class="hidden">
     <p class="eyebrow">Les pronostics de</p>
     <h1>Steevie</h1>
   </header>
 
+  <div id="nav"></div>
+
   <!-- ============================================== chargement -->
   <section id="s-load"><p class="sub" style="margin:0">Un instant…</p></section>
 
-  <!-- ============================================== accueil -->
-  <section id="s-accueil" class="hidden">
+  <!-- ============================================== sans lien -->
+  <!-- Volontairement nue : ni texte du jeu, ni navigation, ni lien sortant.
+       Quelqu'un qui arrive ici sans jeton ne doit rien apprendre. -->
+  <section id="s-accueil" class="hidden nue">
+    <p class="sub" style="margin-bottom:18px">Cette page s'ouvre avec un lien
+      personnel. Si tu en avais un, saisis l'adresse qui l'a reçu.</p>
+    <input type="email" id="email" placeholder="adresse mail" autocomplete="email">
+    <button class="cta" id="btn-resend" style="margin-top:12px">Recevoir le lien</button>
+    <p class="note" id="resend-msg"></p>
+  </section>
+
+  <!-- ============================================== pseudo -->
+  <section id="s-pseudo" class="hidden">
     <p class="accroche">Qui est Steevie ?</p>
 
-    <p>Malgré plusieurs mois à le fréquenter jour et nuit, nous savons finalement
-      sur Steevie peu de choses. Qu'il a des prédispositions certaines pour le
-      Muay-thaï, ça oui. Mais est-ce qu'il sera format Steevie Mathy ou
+    <p>Malgré des mois à le fréquenter jour et nuit, nous savons finalement sur
+      Steevie peu de choses. Qu'il a des prédispositions certaines pour le Muay
+      Thaï, ça oui. Mais est-ce qu'il sera format Steevie Mathy ou Victor
       Steevanyama ? Que son anniversaire ne sera jamais très loin de Noël, ça
       oui. Mais est-ce qu'il aura la passion du Scorpion ou l'optimisme du
       Sagittaire ? S'agira-t-il d'ailleurs d'un Steeve ou d'une Steevette ?
@@ -37,8 +50,7 @@
 
     <p>100 jetons, 8 questions, un système de cote, et un maximum de points à
       gagner. Si tu finis premier, tu remporteras la gloire éternelle, et
-      peut-être le bavoir porté par Steevie lors de son premier biberon, et
-      donc dédicacé.</p>
+      peut-être le bavoir porté par Steevie lors de son premier biberon.</p>
 
     <p class="accroche petite">Prêt ? Place au jeu !</p>
 
@@ -46,22 +58,11 @@
 
     <div class="sep"></div>
 
-    <h2>Reçois ton lien</h2>
-    <p class="sub">Chaque invité a un lien personnel, envoyé par mail. Entre
-      ton mail ici et garde ensuite le lien de connexion reçu.</p>
-    <div style="margin-bottom:16px">
-      <label class="q" for="email">Ton adresse mail</label>
-      <input type="email" id="email" placeholder="prenom@exemple.fr" autocomplete="email">
-    </div>
-    <button class="cta" id="btn-resend">Envoyer mon lien</button>
-    <p class="note" id="resend-msg"></p>
-  </section>
-
-  <!-- ============================================== pseudo -->
-  <section id="s-pseudo" class="hidden">
     <h2 id="hello"></h2>
     <p class="sub">Choisis le nom sous lequel tu apparaîtras dans le tableau
-      des pronostics. Toute la famille le verra, mamie comprise.</p>
+      des pronostics. Il doit permettre aux autres de te reconnaître : ton
+      prénom suffit, un surnom que toute la famille connaît fait l'affaire.
+      Évite l'anonymat complet, c'est moins drôle au moment du classement.</p>
     <div style="margin-bottom:16px">
       <label class="q" for="pseudo">Ton pseudo</label>
       <input type="text" id="pseudo" maxlength="14" placeholder="14 caractères maximum">
@@ -172,7 +173,7 @@
     </div>
   </section>
 
-  <footer>Une page privée pour Steevie</footer>
+  <footer id="pied" class="hidden">Une page privée pour Steevie</footer>
 </div>
 
 <div class="solde hidden" id="solde">
@@ -183,6 +184,7 @@
   <button class="mini" id="btn-save">Valider</button>
 </div>
 
+<script src="nav.js"></script>
 <script src="config.js"></script>
 <script src="modele.js"></script>
 <script src="ticket.js"></script>

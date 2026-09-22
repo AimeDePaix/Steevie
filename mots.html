@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Steevie — le livre d'or</title>
+<title>Steevie — un mot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -15,38 +15,41 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Le livre d'or de</p>
+    <p class="eyebrow">Un mot pour</p>
     <h1>Steevie</h1>
   </header>
 
+  <div id="nav"></div>
+
   <section id="s-load"><p class="sub" style="margin:0">Un instant…</p></section>
 
-  <section id="s-ecrire" class="hidden">
+  <section id="s-intro" class="hidden">
     <p class="accroche">Un mot pour plus tard.</p>
-    <p>Steevie ne sait pas encore lire, mais ça viendra. Laissez-lui un
-      conseil, une bêtise, une promesse, ou un mot pour ses parents qui vont
-      en avoir besoin. On imprimera tout ça pour son premier anniversaire.</p>
-
-    <div class="champ-mot">
-      <label class="q" for="mot">Ton message</label>
-      <textarea id="mot" maxlength="600" rows="5"
-        placeholder="Cher Steevie…"></textarea>
-      <div class="compteur" id="compteur">600 caractères restants</div>
+    <p>Steevie ne sait pas encore lire, mais ça viendra. Laisse-lui un conseil,
+      une bêtise, une promesse. Et si le cœur t'en dit, un mot pour ses parents,
+      qui vont en avoir besoin.</p>
+    <div class="avertissement">
+      Deux messages, pas un de plus, et <strong>une seule fois</strong>. Les
+      pronostics se modifient jusqu'à la clôture, les mots non : une fois
+      déposés, c'est écrit pour de bon. Ils restent privés, seuls les parents
+      les liront.
     </div>
-    <button class="cta" id="btn-envoyer">Déposer mon mot</button>
-    <p class="error hidden" id="err"></p>
   </section>
 
-  <section id="s-mots" class="hidden">
-    <h2>Ce qu'on lui a déjà écrit</h2>
-    <p class="sub" id="mots-sub"></p>
-    <div id="liste-mots"></div>
-    <a class="cta ghost bloc" id="retour" href="index.html" style="margin-top:24px">Retour aux pronostics</a>
+  <section id="s-steevie" class="hidden">
+    <h2>Pour Steevie</h2>
+    <div id="bloc-steevie"></div>
+  </section>
+
+  <section id="s-parents" class="hidden">
+    <h2>Pour les parents</h2>
+    <div id="bloc-parents"></div>
   </section>
 
   <footer>Une page privée pour Steevie</footer>
 </div>
 
+<script src="nav.js"></script>
 <script src="config.js"></script>
 <script src="mots.js"></script>
 </body>

@@ -8,7 +8,94 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+
+<!-- ===========================================================================
+     FICHIER AUTONOME.
+     Style et script sont à l'intérieur : il ne dépend d'aucun autre fichier du
+     site. Tu peux le modifier, le casser, le refaire entièrement sans jamais
+     toucher aux pronostics. Sur GitHub : ouvre le fichier, clique le crayon,
+     modifie, commit. Rien d'autre à redéposer.
+
+     POUR AJOUTER UN CADEAU : va dans la liste CADEAUX en bas de ce fichier.
+     n = nom, p = prix, c = catégorie, e = émoji, r = déjà réservé (true/false).
+     POUR CHANGER LE CODE D'ACCÈS : la constante CODE, juste au-dessus.
+     =========================================================================== -->
+
+<style>
+:root {
+  --paper: #E9EEE7; --card: #FCFDFB; --ink: #17251F; --ink-soft: #5F6E66;
+  --rule: #CBD5C7; --accent: #D9A31E;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Karla", system-ui, sans-serif;
+  --mono: "DM Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 16px 80px; background: var(--paper); color: var(--ink);
+  font: 400 17px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 640px; margin: 0 auto; }
+.hidden { display: none !important; }
+
+header { padding: 48px 0 28px; text-align: center; }
+.eyebrow { margin: 0; font: 500 12px/1 var(--mono); letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-soft); }
+h1 { margin: 12px 0 0; font-family: var(--display);
+  font-variation-settings: "SOFT" 60, "WONK" 1, "opsz" 100; font-weight: 600;
+  font-size: clamp(52px, 15vw, 84px); line-height: .95; letter-spacing: -.02em; }
+
+section { background: var(--card); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 26px 20px; margin-bottom: 18px; }
+h2 { margin: 0 0 4px; font-family: var(--display);
+  font-variation-settings: "SOFT" 40, "opsz" 20; font-weight: 600; font-size: 23px; }
+.sub { margin: 0 0 22px; color: var(--ink-soft); font-size: 15px; }
+.accroche { margin: 0 0 16px; font-family: var(--display);
+  font-variation-settings: "SOFT" 50, "WONK" 1, "opsz" 40; font-weight: 500;
+  font-size: 25px; line-height: 1.3; }
+.erreur { color: #A33; font-size: 15px; margin-top: 12px; }
+
+input[type=password] { width: 100%; padding: 13px 12px; border: 1px solid var(--rule);
+  border-radius: 3px; background: var(--card); font: 400 17px/1 var(--body); color: var(--ink); }
+.cta { width: 100%; padding: 16px; border: none; border-radius: 3px; background: var(--ink);
+  color: var(--card); font: 700 17px/1 var(--body); cursor: pointer; text-align: center;
+  display: block; text-decoration: none; }
+.cta.ghost { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
+
+.retour-nav { margin: 0 -16px 18px; background: var(--ink); }
+.retour-nav a { display: inline-block; padding: 13px 16px; font: 500 13px/1 var(--body);
+  color: rgba(252,253,251,.7); text-decoration: none; }
+.retour-nav a:hover { color: var(--card); }
+
+.filtres { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+.filtre { padding: 8px 14px; border: 1px solid var(--rule); border-radius: 20px;
+  background: transparent; font: 400 14px/1 var(--body); color: var(--ink); cursor: pointer; }
+.filtre.actif { background: var(--ink); border-color: var(--ink); color: var(--card); }
+
+.cadeau { display: flex; align-items: center; gap: 14px; padding: 12px 0;
+  border-bottom: 1px solid var(--rule); }
+.cadeau:last-child { border-bottom: none; }
+.vignette { flex: 0 0 52px; height: 52px; display: flex; align-items: center;
+  justify-content: center; background: var(--paper); border-radius: 3px; font-size: 25px; }
+.corps { flex: 1; min-width: 0; }
+.nom { font-weight: 500; font-size: 15.5px; }
+.meta { font: 400 13px/1.5 var(--mono); color: var(--ink-soft); }
+.btn { flex: 0 0 auto; padding: 10px 16px; border: 1px solid var(--ink); border-radius: 3px;
+  background: transparent; font: 500 14px/1 var(--body); color: var(--ink); cursor: pointer; }
+.btn:hover { background: var(--ink); color: var(--card); }
+.btn:disabled { opacity: .45; cursor: default; background: transparent; color: var(--ink); }
+.etat { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; background: var(--paper);
+  font: 500 12px/1.5 var(--body); color: var(--ink-soft); }
+.pris .vignette { filter: grayscale(1); opacity: .5; }
+.pris .nom { color: var(--ink-soft); text-decoration: line-through; }
+
+.avancement { margin-top: 26px; }
+.piste { height: 8px; background: var(--paper); border-radius: 20px; overflow: hidden; }
+.remplie { height: 100%; background: linear-gradient(90deg, var(--accent), #B8862C);
+  transition: width .4s ease; }
+.avancement p { margin: 8px 0 0; font: 400 13px/1 var(--mono); color: var(--ink-soft); }
+
+.apercu { margin-top: 22px; padding: 12px 14px; background: #FBF2D8;
+  border-left: 3px solid var(--accent); border-radius: 0 3px 3px 0; font-size: 14px; }
+footer { text-align: center; padding: 24px 0; font: 400 13px/1.6 var(--mono); color: var(--ink-soft); }
+</style>
 </head>
 
 <body>
@@ -19,100 +106,124 @@
     <h1>Steevie</h1>
   </header>
 
-  <section>
+  <div class="retour-nav" id="retour-nav"></div>
+
+  <!-- porte d'entrée -->
+  <section id="verrou">
+    <h2>Pas encore ouverte</h2>
+    <p class="sub">La liste se prépare. Si les parents t'ont donné le code, tu
+      peux jeter un œil en avant-première.</p>
+    <input type="password" id="code" placeholder="Code d'accès" autocomplete="off">
+    <button class="cta" id="btn-code" style="margin-top:12px">Entrer</button>
+    <p class="erreur hidden" id="code-err"></p>
+  </section>
+
+  <!-- contenu -->
+  <section id="intro" class="hidden">
     <p class="accroche">Steevie arrive léger.</p>
     <p>Il n'a ni vêtements, ni lit, ni la moindre opinion sur la décoration de
       sa chambre. Si vous voulez l'aider à s'installer, voilà de quoi piocher.</p>
-    <p>Réserver un cadeau le réserve pour vous seul, personne d'autre ne pourra
-      le prendre. On ne voit pas qui a réservé quoi, alors gardez la surprise.</p>
-
-    <div class="apercu">
-      <strong>Aperçu</strong> — cette page est une maquette. Les articles
-      ci-dessous sont des exemples, et le bouton de réservation n'est pas
-      encore branché.
-    </div>
+    <p>Réserver un cadeau le met de côté pour vous seul. On ne voit pas qui a
+      réservé quoi, alors gardez la surprise.</p>
+    <div class="apercu"><strong>Aperçu</strong> — les articles ci-dessous sont
+      des exemples et le bouton de réservation n'est pas encore branché.</div>
   </section>
 
-  <section>
+  <section id="articles" class="hidden">
     <div class="filtres" id="filtres"></div>
     <div id="cadeaux"></div>
-    <div class="jauge-liste">
-      <div class="jauge-liste-piste"><div class="jauge-liste-remplie" id="avancement"></div></div>
-      <p class="jauge-liste-txt" id="avancement-txt"></p>
+    <div class="avancement">
+      <div class="piste"><div class="remplie" id="jauge"></div></div>
+      <p id="jauge-txt"></p>
     </div>
-    <a class="cta ghost bloc" id="retour" href="index.html" style="margin-top:24px">Retour aux pronostics</a>
   </section>
 
   <footer>Une page privée pour Steevie</footer>
 </div>
 
 <script>
-/* Données d'exemple. À terme, elles viendront d'un onglet « Cadeaux » du
-   Google Sheet, avec une colonne « réservé par » que le serveur remplira. */
+/* --- réglages ----------------------------------------------------------- */
+
+var CODE = '1925';
+
 var CADEAUX = [
-  { n: 'Gigoteuse 0-6 mois',        p: 39,  c: 'Dormir',     e: '🌙', r: false },
-  { n: 'Veilleuse à intensité douce', p: 29, c: 'Dormir',     e: '💡', r: true  },
-  { n: 'Drap housse en lin, x2',    p: 45,  c: 'Dormir',     e: '🛏️', r: false },
-  { n: 'Turbulette hiver',          p: 49,  c: 'Dormir',     e: '❄️', r: false },
-  { n: 'Body manches longues, lot de 5', p: 32, c: 'S\'habiller', e: '👕', r: false },
-  { n: 'Chaussons en cuir souple',  p: 24,  c: 'S\'habiller', e: '👟', r: true  },
-  { n: 'Bavoirs en coton, lot de 3', p: 18, c: 'S\'habiller', e: '🧣', r: false },
-  { n: 'Porte-bébé physiologique',  p: 129, c: 'Sortir',     e: '🎒', r: false },
-  { n: 'Sac à langer',              p: 79,  c: 'Sortir',     e: '👜', r: false },
-  { n: 'Matelas à langer nomade',   p: 35,  c: 'Sortir',     e: '🧳', r: false },
-  { n: 'Mobile musical',            p: 42,  c: 'Jouer',      e: '🎵', r: false },
-  { n: 'Tapis d\'éveil',            p: 65,  c: 'Jouer',      e: '🧸', r: true  },
-  { n: 'Livres en tissu, lot de 3', p: 22,  c: 'Jouer',      e: '📚', r: false },
-  { n: 'Hochet en bois',            p: 14,  c: 'Jouer',      e: '🪀', r: false }
+  { n: 'Gigoteuse 0-6 mois',            p: 39,  c: 'Dormir',      e: '🌙', r: false },
+  { n: 'Veilleuse à intensité douce',   p: 29,  c: 'Dormir',      e: '💡', r: true  },
+  { n: 'Draps housse en lin, lot de 2', p: 45,  c: 'Dormir',      e: '🛏️', r: false },
+  { n: 'Turbulette hiver',              p: 49,  c: 'Dormir',      e: '❄️', r: false },
+  { n: 'Bodys manches longues, lot de 5', p: 32, c: "S'habiller", e: '👕', r: false },
+  { n: 'Chaussons en cuir souple',      p: 24,  c: "S'habiller",  e: '👟', r: true  },
+  { n: 'Bavoirs en coton, lot de 3',    p: 18,  c: "S'habiller",  e: '🧣', r: false },
+  { n: 'Porte-bébé physiologique',      p: 129, c: 'Sortir',      e: '🎒', r: false },
+  { n: 'Sac à langer',                  p: 79,  c: 'Sortir',      e: '👜', r: false },
+  { n: 'Matelas à langer nomade',       p: 35,  c: 'Sortir',      e: '🧳', r: false },
+  { n: 'Mobile musical',                p: 42,  c: 'Jouer',       e: '🎵', r: false },
+  { n: "Tapis d'éveil",                 p: 65,  c: 'Jouer',       e: '🧸', r: true  },
+  { n: 'Livres en tissu, lot de 3',     p: 22,  c: 'Jouer',       e: '📚', r: false },
+  { n: 'Hochet en bois',                p: 14,  c: 'Jouer',       e: '🪀', r: false }
 ];
 
+/* --- mécanique ---------------------------------------------------------- */
+
+var $ = function (id) { return document.getElementById(id); };
 var filtre = 'Tout';
+var jeton = new URLSearchParams(location.search).get('t') || '';
+
+if (jeton) {
+  $('retour-nav').innerHTML = '<a href="index.html?t=' + encodeURIComponent(jeton)
+    + '">‹ Retour aux pronostics</a>';
+}
 
 var cats = ['Tout'].concat(CADEAUX.map(function (g) { return g.c; })
   .filter(function (v, i, a) { return a.indexOf(v) === i; }));
 
 function rendre() {
-  document.getElementById('filtres').innerHTML = cats.map(function (c) {
-    return '<button class="filtre' + (c === filtre ? ' actif' : '') + '" data-c="'
-      + c + '">' + c + '</button>';
+  $('filtres').innerHTML = cats.map(function (c) {
+    return '<button class="filtre' + (c === filtre ? ' actif' : '') + '" data-c="' + c + '">'
+      + c + '</button>';
   }).join('');
 
   var liste = CADEAUX.filter(function (g) { return filtre === 'Tout' || g.c === filtre; });
 
-  document.getElementById('cadeaux').innerHTML = liste.map(function (g, i) {
+  $('cadeaux').innerHTML = liste.map(function (g) {
     return '<div class="cadeau' + (g.r ? ' pris' : '') + '">'
-      + '<div class="cadeau-vignette">' + g.e + '</div>'
-      + '<div class="cadeau-corps">'
-      +   '<div class="cadeau-nom">' + g.n + '</div>'
-      +   '<div class="cadeau-meta">' + g.c + ' · ' + g.p + ' €</div>'
-      + '</div>'
-      + (g.r
-          ? '<span class="cadeau-etat">Réservé</span>'
-          : '<button class="cadeau-btn" data-i="' + CADEAUX.indexOf(g) + '">Réserver</button>')
+      + '<div class="vignette">' + g.e + '</div>'
+      + '<div class="corps"><div class="nom">' + g.n + '</div>'
+      +   '<div class="meta">' + g.c + ' · ' + g.p + ' €</div></div>'
+      + (g.r ? '<span class="etat">Réservé</span>'
+             : '<button class="btn">Réserver</button>')
       + '</div>';
   }).join('');
 
   var pris = CADEAUX.filter(function (g) { return g.r; }).length;
-  document.getElementById('avancement').style.width = (pris / CADEAUX.length * 100) + '%';
-  document.getElementById('avancement-txt').textContent =
-    pris + ' cadeau' + (pris > 1 ? 'x' : '') + ' sur ' + CADEAUX.length + ' déjà réservé'
-    + (pris > 1 ? 's' : '');
+  $('jauge').style.width = (pris / CADEAUX.length * 100) + '%';
+  $('jauge-txt').textContent = pris + ' cadeau' + (pris > 1 ? 'x' : '') + ' sur '
+    + CADEAUX.length + ' déjà réservé' + (pris > 1 ? 's' : '');
 
   document.querySelectorAll('.filtre').forEach(function (b) {
     b.onclick = function () { filtre = b.dataset.c; rendre(); };
   });
-  document.querySelectorAll('.cadeau-btn').forEach(function (b) {
-    b.onclick = function () {
-      b.textContent = 'Bientôt disponible';
-      b.disabled = true;
-    };
+  document.querySelectorAll('.btn').forEach(function (b) {
+    b.onclick = function () { b.textContent = 'Bientôt disponible'; b.disabled = true; };
   });
 }
 
-rendre();
+function ouvrir() {
+  $('verrou').classList.add('hidden');
+  $('intro').classList.remove('hidden');
+  $('articles').classList.remove('hidden');
+  rendre();
+  try { sessionStorage.setItem('steevie-liste', 'ok'); } catch (e) {}
+}
 
-var t = new URLSearchParams(location.search).get('t');
-if (t) document.getElementById('retour').href = 'index.html?t=' + encodeURIComponent(t);
+$('btn-code').onclick = function () {
+  if ($('code').value.trim() === CODE) { ouvrir(); return; }
+  $('code-err').textContent = 'Code incorrect.';
+  $('code-err').classList.remove('hidden');
+};
+$('code').onkeydown = function (e) { if (e.key === 'Enter') $('btn-code').click(); };
+
+try { if (sessionStorage.getItem('steevie-liste') === 'ok') ouvrir(); } catch (e) {}
 </script>
 </body>
 </html>

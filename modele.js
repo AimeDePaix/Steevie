@@ -17,12 +17,12 @@ var STV_SIGNES = ['Bélier', 'Taureau', 'Gémeaux', 'Cancer', 'Lion', 'Vierge',
   'Balance', 'Scorpion', 'Sagittaire', 'Capricorne', 'Verseau', 'Poissons'];
 
 var STV_CRENEAUX = [
-  { cle: '0h-4h',   debut: 0,  fin: 4,  poids: 19, couleur: '#1B2A4A', nuit: true },
-  { cle: '4h-8h',   debut: 4,  fin: 8,  poids: 20, couleur: '#456092', nuit: true },
-  { cle: '8h-12h',  debut: 8,  fin: 12, poids: 17, couleur: '#EFC65C', nuit: false },
-  { cle: '12h-16h', debut: 12, fin: 16, poids: 15, couleur: '#F2D98A', nuit: false },
-  { cle: '16h-20h', debut: 16, fin: 20, poids: 14, couleur: '#C97B37', nuit: false },
-  { cle: '20h-0h',  debut: 20, fin: 24, poids: 15, couleur: '#243761', nuit: true }
+  { cle: '0h-4h',   libelle: '0h – 3h59',   debut: 0,  fin: 4,  poids: 19, couleur: '#1B2A4A', nuit: true },
+  { cle: '4h-8h',   libelle: '4h – 7h59',   debut: 4,  fin: 8,  poids: 20, couleur: '#456092', nuit: true },
+  { cle: '8h-12h',  libelle: '8h – 11h59',  debut: 8,  fin: 12, poids: 17, couleur: '#EFC65C', nuit: false },
+  { cle: '12h-16h', libelle: '12h – 15h59', debut: 12, fin: 16, poids: 15, couleur: '#F2D98A', nuit: false },
+  { cle: '16h-20h', libelle: '16h – 19h59', debut: 16, fin: 20, poids: 14, couleur: '#C97B37', nuit: false },
+  { cle: '20h-0h',  libelle: '20h – 23h59', debut: 20, fin: 24, poids: 15, couleur: '#243761', nuit: true }
 ];
 
 /* Initiales des prénoms — fichier INSEE, naissances 2021-2025, 3 169 645 cas.
@@ -155,26 +155,68 @@ function stvJourVersDate(cfg, jour) {
 
 function stvKg(g) { return (g / 1000).toFixed(1).replace('.', ',') + ' kg'; }
 
+function stvBornes(txt) {
+  return String(txt || '').split('|')
+    .map(function (v) { return Number(String(v).trim()); })
+    .filter(function (v) { return isFinite(v); })
+    .sort(function (a, b) { return a - b; });
+}
+
+/**
+ * Les tranches de poids, définies par leurs bornes dans l'onglet Config.
+ *
+ * RÈGLE D'ÉTANCHÉITÉ : le poids annoncé est d'abord arrondi à la centaine de
+ * grammes la plus proche, puis on cherche sa tranche. 3 250 g devient 3,3 kg
+ * et tombe donc dans « 3,3 – 3,5 kg ». Aucun trou, aucun recouvrement, et les
+ * libellés affichés sont exactement les valeurs qui gagnent.
+ */
 function stvTranchesPoids(cfg) {
-  var t = [{ cle: 'lt', libelle: 'moins de ' + stvKg(cfg.poids_bas), court: '< ' + stvKg(cfg.poids_bas) }];
-  for (var g = cfg.poids_bas; g < cfg.poids_haut; g += cfg.poids_pas) {
-    t.push({ cle: String(g), min: g, max: g + cfg.poids_pas,
-             libelle: stvKg(g) + ' – ' + stvKg(g + cfg.poids_pas),
-             court: stvKg(g).replace(' kg', '') });
+  var b = stvBornes(cfg.poids_bornes), t = [], i;
+  if (b.length < 2) b = [2700, 3000, 3300, 3600, 3900, 4200, 4500];
+
+  t.push({ cle: 'lt', libelle: 'moins de ' + stvKg(b[0]), court: stvKg(b[0]).replace(' kg', '') });
+  for (i = 0; i < b.length - 1; i++) {
+    var haut = b[i + 1] - 100;
+    t.push({
+      cle: String(b[i]),
+      libelle: (haut > b[i] ? stvKg(b[i]) + ' – ' + stvKg(haut) : stvKg(b[i])),
+      court: stvKg(b[i]).replace(' kg', '')
+    });
   }
-  t.push({ cle: 'gt', libelle: 'plus de ' + stvKg(cfg.poids_haut), court: '> ' + stvKg(cfg.poids_haut) });
+  var d = b[b.length - 1];
+  t.push({ cle: 'gt', libelle: stvKg(d) + ' ou plus', court: stvKg(d).replace(' kg', '') });
   return t;
 }
 
+/* Même mécanique pour la taille, au centimètre. */
 function stvTranchesTaille(cfg) {
-  var t = [{ cle: 'lt', libelle: 'moins de ' + cfg.taille_bas + ' cm', valeur: cfg.taille_bas - 1.5 }];
-  for (var c = cfg.taille_bas; c <= cfg.taille_haut; c++) {
-    t.push({ cle: String(c), libelle: c + ' cm', valeur: c });
+  var b = stvBornes(cfg.taille_bornes), t = [], i;
+  if (b.length < 2) b = [48, 49, 50, 51, 52, 53, 54];
+
+  t.push({ cle: 'lt', libelle: 'moins de ' + b[0] + ' cm', valeur: b[0] - 1.5 });
+  for (i = 0; i < b.length - 1; i++) {
+    var haut = b[i + 1] - 1;
+    t.push({
+      cle: String(b[i]),
+      libelle: (haut > b[i] ? b[i] + ' – ' + haut + ' cm' : b[i] + ' cm'),
+      valeur: (b[i] + haut) / 2
+    });
   }
-  t.push({ cle: 'gt', libelle: 'plus de ' + cfg.taille_haut + ' cm', valeur: cfg.taille_haut + 1.5 });
+  var d = b[b.length - 1];
+  t.push({ cle: 'gt', libelle: d + ' cm ou plus', valeur: d + 1.5 });
   return t;
 }
 
+/* Retrouve la tranche d'une valeur réelle. Sert au dépouillement. */
+function stvTrancheDe(bornes, valeur, pas) {
+  var v = pas === 100 ? Math.round(Number(valeur) / 100) * 100 : Math.round(Number(valeur));
+  if (!isFinite(v)) return '';
+  if (v < bornes[0]) return 'lt';
+  for (var i = bornes.length - 1; i >= 0; i--) {
+    if (v >= bornes[i]) return (i === bornes.length - 1) ? 'gt' : String(bornes[i]);
+  }
+  return 'lt';
+}
 
 /* ============================================================================
    Les lois
@@ -248,25 +290,33 @@ function stvLoiDate(cfg) {
   return stvNormalise(p);
 }
 
+/* L'arrondi à la centaine décale les frontières de 50 g : la tranche qui
+   commence à 3 000 g attrape en réalité tout ce qui pèse 2 950 g et plus. */
 function stvLoiPoids(cfg, sexe) {
   var mu = cfg['poids_moyen_' + sexe] + stvBorne(cfg.ajust_poids, cfg.ajust_poids_max);
-  var sd = cfg.poids_sd, p = {};
-  p.lt = stvCdf(cfg.poids_bas, mu, sd);
-  for (var g = cfg.poids_bas; g < cfg.poids_haut; g += cfg.poids_pas) {
-    p[String(g)] = stvBande(g, g + cfg.poids_pas, mu, sd);
+  var sd = cfg.poids_sd, p = {}, i;
+  var b = stvBornes(cfg.poids_bornes);
+  if (b.length < 2) b = [2700, 3000, 3300, 3600, 3900, 4200, 4500];
+
+  p.lt = stvCdf(b[0] - 50, mu, sd);
+  for (i = 0; i < b.length - 1; i++) {
+    p[String(b[i])] = stvBande(b[i] - 50, b[i + 1] - 50, mu, sd);
   }
-  p.gt = 1 - stvCdf(cfg.poids_haut, mu, sd);
+  p.gt = 1 - stvCdf(b[b.length - 1] - 50, mu, sd);
   return stvNormalise(p);
 }
 
 function stvLoiTaille(cfg, sexe) {
   var mu = cfg['taille_moyenne_' + sexe] + stvBorne(cfg.ajust_taille, cfg.ajust_taille_max);
-  var sd = cfg.taille_sd, p = {};
-  p.lt = stvCdf(cfg.taille_bas - 0.5, mu, sd);
-  for (var c = cfg.taille_bas; c <= cfg.taille_haut; c++) {
-    p[String(c)] = stvBande(c - 0.5, c + 0.5, mu, sd);
+  var sd = cfg.taille_sd, p = {}, i;
+  var b = stvBornes(cfg.taille_bornes);
+  if (b.length < 2) b = [48, 49, 50, 51, 52, 53, 54];
+
+  p.lt = stvCdf(b[0] - 0.5, mu, sd);
+  for (i = 0; i < b.length - 1; i++) {
+    p[String(b[i])] = stvBande(b[i] - 0.5, b[i + 1] - 0.5, mu, sd);
   }
-  p.gt = 1 - stvCdf(cfg.taille_haut + 0.5, mu, sd);
+  p.gt = 1 - stvCdf(b[b.length - 1] - 0.5, mu, sd);
   return stvNormalise(p);
 }
 

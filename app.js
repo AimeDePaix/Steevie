@@ -3,6 +3,7 @@
    ============================================================================ */
 
 var TOKEN = new URLSearchParams(location.search).get('t') || '';
+var VUE = new URLSearchParams(location.search).get('vue') || '';
 
 var CFG = null, MOI = null, PHASE = 'open';
 var R = {}, MISES = {}, CALC = null;
@@ -45,6 +46,7 @@ var show = function (id, on) { $(id).classList.toggle('hidden', !on); };
 if (!TOKEN) {
   show('s-load', false);
   show('s-accueil', true);
+  document.title = 'Accès personnel';
 } else {
   fetch(API + '?action=me&t=' + encodeURIComponent(TOKEN))
     .then(function (r) { return r.json(); })
@@ -56,6 +58,8 @@ function demarrer(d) {
   show('s-load', false);
   if (!d.ok) { show('s-accueil', true); return; }
 
+  show('entete', true);
+  show('pied', true);
   CFG = d.config;
   PHASE = d.phase;
   MOI = { prenom: d.prenom, pseudo: d.pseudo || '' };
@@ -94,6 +98,11 @@ function etape(nom) {
 }
 
 function apresPseudo() {
+  // La barre de navigation peut demander une vue précise.
+  if (VUE === 'regles') { construireRegles(); etape('s-regles'); return; }
+  if (VUE === 'ticket' && DEJA_VALIDE) { montrerTicketSiPossible(); return; }
+  if (VUE === 'pronos') { ouvrirFormulaire(); return; }
+
   if (DEJA_VALIDE) { montrerTicketSiPossible(); return; }
   construireRegles();
   etape('s-regles');
@@ -142,9 +151,8 @@ $('btn-pseudo').onclick = function () {
 
 function construireRegles() {
   $('regles-cloture').textContent = 'Tu peux revenir modifier tes réponses '
-    + 'autant que tu veux, mais tout se fige le ' + jolieDate(CFG.cloture)
-    + ' au soir. Après, plus personne ne touche à rien : ce serait trop facile '
-    + 'de corriger sa date en voyant que le bébé n\'est toujours pas là.';
+    + 'autant que tu veux jusqu\'au ' + jolieDate(CFG.cloture) + ' au soir. '
+    + 'Ensuite, tout se fige.';
 }
 
 $('btn-regles').onclick = function () {
@@ -327,7 +335,7 @@ function optionsDe(cle) {
     for (i = 65; i <= 90; i++) out.push({ v: String.fromCharCode(i), l: String.fromCharCode(i) });
     return out;
   }
-  if (cle === 'heure') return STV_CRENEAUX.map(function (c) { return { v: c.cle, l: c.cle }; });
+  if (cle === 'heure') return STV_CRENEAUX.map(function (c) { return { v: c.cle, l: c.libelle }; });
   if (cle === 'ascendant') return STV_SIGNES.map(function (s) { return { v: s, l: s }; });
   if (cle === 'chevelu') return STV_COUPE.map(function (c) {
     return { v: c.cle, l: c.libelle, detail: c.detail }; });
@@ -389,14 +397,16 @@ function pastilles(zone, q, loi, cotes, choisi) {
   box.className = 'chips' + (q.cle === 'lettre' ? ' lettres' : '');
 
   optionsDe(q.cle).forEach(function (o) {
-    var impossible = (o.v !== 'P') && (loi[o.v] === undefined || loi[o.v] < 1e-9);
+    // La pomme de terre n'existe QUE sur la question du sexe. Sans ce test,
+    // la lettre P héritait de sa cote à 10 000.
+    var patate = (q.cle === 'sexe' && o.v === 'P');
+    var impossible = !patate && (loi[o.v] === undefined || loi[o.v] < 1e-9);
     var b = document.createElement('button');
-    b.className = 'chip' + (impossible ? ' off' : '') + (o.v === 'P' ? ' patate' : '');
+    b.className = 'chip' + (impossible ? ' off' : '') + (patate ? ' patate' : '');
     b.dataset.v = o.v;
     b.innerHTML = '<span class="lbl">' + o.l + '</span>'
-      + (o.detail ? '<span class="det">' + o.detail + '</span>' : '')
       + '<span class="cote">' + (impossible ? '—'
-          : stvFmtCote(o.v === 'P' ? STV_COTE_PATATE : cotes[o.v])) + '</span>';
+          : stvFmtCote(patate ? STV_COTE_PATATE : cotes[o.v])) + '</span>';
     if (String(choisi) === String(o.v)) b.setAttribute('aria-pressed', 'true');
     b.onclick = function () {
       if (impossible) return expliquerImpossible(q.cle);
@@ -407,9 +417,9 @@ function pastilles(zone, q, loi, cotes, choisi) {
   zone.appendChild(box);
 }
 
-/* Jauge glissante du poids. Trois repères pour lire la valeur : les
-   graduations chiffrées sous la piste, le libellé en gros, et un poids de
-   balance qui grossit tranche après tranche. */
+/* Jauge glissante du poids. La pastille se pose au MILIEU de la tranche, et
+   les graduations marquent les bornes : on voit ainsi que 3,7 kg se situe
+   entre 3,6 et 3,8, sans confusion possible. */
 function jaugePoids(zone, q, loi, cotes, choisi) {
   var opts = optionsDe('poids');
   var i = indexDe(opts, choisi);
@@ -418,44 +428,39 @@ function jaugePoids(zone, q, loi, cotes, choisi) {
 
   zone.innerHTML =
       '<div class="curseur poids' + (pose ? '' : ' vierge') + '">'
-    +   '<div class="piste"><div class="pastille-c" style="left:' + pct(i, opts.length) + '%"></div></div>'
+    +   '<div class="piste"><div class="pastille-c" style="left:' + centre(i, opts.length) + '%"></div></div>'
     +   '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" aria-label="Poids">'
     + '</div>'
-    + graduations(opts)
+    + bornesPoids(opts.length)
+    + '<div class="jauge-bornes"><span>🦐 une crevette</span>'
+    +   '<span>pilier du Stade Toulousain 🏉</span></div>'
     + '<div class="choix-ligne avec-icone">'
     +   '<span class="icone-poids" style="--p:' + echelle(i, opts.length) + '">' + poidsSVG() + '</span>'
     +   '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
     +   (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
-    + '</div>';
+    + '</div>'
+    + '<p class="qhint regle-borne">Le poids annoncé est arrondi à la centaine de '
+    +   'grammes la plus proche, puis on regarde la tranche. 3 250 g devient 3,3 kg '
+    +   'et tombe donc dans « 3,3 kg – 3,5 kg ».</p>';
 
   brancherCurseur(zone, opts, 'poids');
 }
 
-/* Une graduation sur deux, sinon c'est illisible sur un téléphone. */
-function graduations(opts) {
+/* Les graduations tombent sur les bornes entre tranches, pas sur les tranches :
+   la pastille se voit ainsi toujours à l'intérieur de sa tranche. */
+function bornesPoids(n) {
+  var b = stvBornes(CFG.poids_bornes);
   var h = '<div class="gradus">';
-  opts.forEach(function (o, i) {
-    var montre = (i % 2 === 0) || i === opts.length - 1;
-    h += '<span class="gradu' + (montre ? '' : ' muet') + '" style="left:'
-       + pct(i, opts.length) + '%"><i></i>'
-       + (montre ? '<em>' + (o.court || o.l) + '</em>' : '') + '</span>';
+  b.forEach(function (g, j) {
+    var x = ((j + 1) / n) * 100;
+    h += '<span class="gradu" style="left:' + x.toFixed(2) + '%"><i></i>'
+       + '<em>' + (g / 1000).toFixed(1).replace('.', ',') + '</em></span>';
   });
   return h + '</div>';
 }
 
-function echelle(i, n) { return (0.46 + (i / (n - 1)) * 0.74).toFixed(3); }
-
-/* Un poids de balance à l'ancienne, qui grandit avec la tranche choisie. */
-function poidsSVG() {
-  return '<svg viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
-    + '<path d="M13 26h34a4 4 0 0 1 4 4v32a5 5 0 0 1-5 5H14a5 5 0 0 1-5-5V30a4 4 0 0 1 4-4z"'
-    + ' fill="none" stroke="currentColor" stroke-width="4"/>'
-    + '<ellipse cx="30" cy="25" rx="21" ry="6" fill="none" stroke="currentColor" stroke-width="4"/>'
-    + '<ellipse cx="30" cy="19" rx="14" ry="5" fill="none" stroke="currentColor" stroke-width="4"/>'
-    + '</svg>';
-}
-
-/* Même principe pour la taille, avec un bébé qui grandit à droite. */
+/* Jauge VERTICALE pour la taille, un bébé qui grandit à côté. L'input est
+   pivoté d'un quart de tour : on garde le glissement et le clavier natifs. */
 function jaugeTaille(zone, q, loi, cotes, choisi) {
   var opts = optionsDe('taille');
   var i = indexDe(opts, choisi);
@@ -463,47 +468,59 @@ function jaugeTaille(zone, q, loi, cotes, choisi) {
   if (!pose) i = indexDe(opts, String(Math.round(CFG['taille_moyenne_' + CALC.sexeUtilise])));
   if (i < 0) i = Math.floor(opts.length / 2);
 
+  var bt = stvBornes(CFG.taille_bornes);
+  var bas = bt[0] - 2, haut = bt[bt.length - 1] + 2;
   var cm = opts[i].valeur;
-  var k = (0.60 + (cm - (CFG.taille_bas - 2)) / ((CFG.taille_haut + 2) - (CFG.taille_bas - 2)) * 0.58).toFixed(3);
+  var k = (0.58 + (cm - bas) / (haut - bas) * 0.60).toFixed(3);
+
+  var gradus = '';
+  opts.forEach(function (o, j) {
+    var lab = o.cle === 'lt' ? '–' : o.cle === 'gt' ? '+' : String(o.cle);
+    gradus += '<span class="gradu-v" style="bottom:' + centre(j, opts.length) + '%">'
+            + '<i></i><em>' + lab + '</em></span>';
+  });
 
   zone.innerHTML =
       '<div class="taille-wrap">'
-    +   '<div class="taille-gauche">'
-    +     '<div class="curseur taille' + (pose ? '' : ' vierge') + '">'
-    +       '<div class="piste"><div class="pastille-c" style="left:' + pct(i, opts.length) + '%"></div></div>'
-    +       '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" '
-    +         'aria-label="Taille">'
-    +     '</div>'
-    +     '<div class="jauge-bornes"><span>tout petit</span><span>déjà grand</span></div>'
-    +     '<div class="choix-ligne">'
-    +       '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
-    +       (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
-    +     '</div>'
+    +   '<div class="curseur-v' + (pose ? '' : ' vierge') + '">'
+    +     '<div class="piste-v"><div class="pastille-c" style="bottom:' + centre(i, opts.length) + '%"></div></div>'
+    +     '<div class="gradus-v">' + gradus + '</div>'
+    +     '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" aria-label="Taille">'
     +   '</div>'
     +   '<div class="bebe-box"><div class="bebe" style="--k:' + k + '">'
     +     bebeSVG(R.sexe) + '</div></div>'
+    +   '<div class="taille-legende">'
+    +     '<div class="borne-haut">déjà grand</div>'
+    +     '<div class="borne-bas">tout petit</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="choix-ligne">'
+    +   '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
+    +   (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
     + '</div>';
 
-  brancherCurseur(zone, opts, 'taille');
+  brancherCurseur(zone, opts, 'taille', true);
 }
 
-function brancherCurseur(zone, opts, cle) {
+function brancherCurseur(zone, opts, cle, vertical) {
   var input = zone.querySelector('input[type=range]');
   var pastille = zone.querySelector('.pastille-c');
   var val = zone.querySelector('.choix-val');
+  var piste = zone.querySelector(vertical ? '.curseur-v' : '.curseur');
 
   // Aperçu immédiat pendant le glissement, sans reconstruire toute la page.
   input.oninput = function () {
     var j = Number(input.value);
-    pastille.style.left = pct(j, opts.length) + '%';
+    pastille.style[vertical ? 'bottom' : 'left'] = centre(j, opts.length) + '%';
     val.textContent = opts[j].l;
-    zone.querySelector('.curseur').classList.remove('vierge');
+    piste.classList.remove('vierge');
   };
   // Le vrai choix n'est enregistré qu'au relâchement.
   input.onchange = function () { choisir(cle, opts[Number(input.value)].v); };
 }
 
-function pct(i, n) { return (n === 1 ? 50 : (i / (n - 1)) * 100).toFixed(2); }
+/* Le centre de la tranche numéro i, en pourcentage de la piste. */
+function centre(i, n) { return (((i + 0.5) / n) * 100).toFixed(2); }
 
 function indexDe(opts, v) {
   if (v === null || v === undefined) return -1;
@@ -544,7 +561,7 @@ function horloge(zone, q, loi, cotes, choisi) {
        + ' d="' + arc(cx, cy, R0, R1, a0, a1) + '" fill="' + c.couleur + '"></path>';
     var am = (a0 + a1) / 2 * Math.PI / 180, rm = (R0 + R1) / 2;
     s += '<text class="q-lab' + (c.nuit ? ' clair' : '') + '" x="' + (cx + rm * Math.cos(am)).toFixed(1)
-       + '" y="' + (cy + rm * Math.sin(am) - 4).toFixed(1) + '">' + c.cle + '</text>';
+       + '" y="' + (cy + rm * Math.sin(am) - 4).toFixed(1) + '">' + c.libelle.replace(/ /g, '') + '</text>';
     s += '<text class="q-cote' + (c.nuit ? ' clair' : '') + '" x="' + (cx + rm * Math.cos(am)).toFixed(1)
        + '" y="' + (cy + rm * Math.sin(am) + 11).toFixed(1) + '">' + stvFmtCote(cotes[c.cle]) + '</text>';
   });
@@ -558,6 +575,13 @@ function horloge(zone, q, loi, cotes, choisi) {
   zone.querySelectorAll('.quartier').forEach(function (p) {
     p.onclick = function () { choisir('heure', p.dataset.v); };
   });
+}
+
+function libelleCreneau(cle) {
+  for (var i = 0; i < STV_CRENEAUX.length; i++) {
+    if (STV_CRENEAUX[i].cle === cle) return STV_CRENEAUX[i].libelle;
+  }
+  return cle || '';
 }
 
 function arc(cx, cy, r0, r1, a0, a1) {
@@ -586,11 +610,8 @@ function contexte(d, q, loi) {
   e.textContent = '';
 
   if (q.cle === 'sexe' && R.sexe === 'P') {
-    e.innerHTML = '<strong>Tu paries sur une pomme de terre.</strong> Cent jetons, '
-      + 'cote 10 000, et le reste du formulaire est bloqué : on ne mise pas sur la '
-      + 'taille d\'un tubercule. Un million de points si tu as raison. Bien tenté, '
-      + 'mais l\'échographie est formelle : Steevie n\'est pas un tubercule. '
-      + 'Choisis entre fille ou garçon pour poursuivre le jeu.';
+    e.innerHTML = 'Bien tenté, mais l\'échographie est formelle : Steevie n\'est '
+      + 'pas un tubercule. Choisis entre fille ou garçon pour poursuivre le jeu.';
   }
   if (q.cle === 'date' && R.date) {
     e.textContent = 'Ton pronostic donne un ' + stvSigneSolaire(R.date)
@@ -710,7 +731,7 @@ function montrerTicketSiPossible() {
 }
 
 function montrerTicket(prono) {
-  show('s-ticket', true);
+  etape('s-ticket');
   dessinerTicket($('ticket-canvas'), CFG, MOI.pseudo, prono, QUESTIONS);
   $('btn-edit').classList.toggle('hidden', PHASE !== 'open');
 }

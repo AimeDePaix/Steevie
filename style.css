@@ -319,11 +319,10 @@ input[type=text], input[type=date], input[type=email], input[type=time], select 
   border-radius: 20px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, .18);
 }
+/* Un dégradé de densité, pas de valeur : du sable clair au bronze profond.
+   Ni rouge ni vert, personne n'est puni d'être un petit gabarit. */
 .curseur.poids .piste {
-  background: linear-gradient(90deg, #E23B2E 0%, #F07C1F 26%, #F2C43B 52%, #A8CE3A 76%, #2FA84F 100%);
-}
-.curseur.taille .piste {
-  background: linear-gradient(90deg, #8FC3DE 0%, #5FA8C9 34%, #3F86AE 68%, #2A6389 100%);
+  background: linear-gradient(90deg, #EBE3D2 0%, #D9BE86 32%, #B08B4F 64%, #6E5228 100%);
 }
 .curseur.vierge .piste { filter: saturate(.35); }
 
@@ -379,16 +378,15 @@ input[type=text], input[type=date], input[type=email], input[type=time], select 
 .taille-wrap { display: flex; gap: 16px; align-items: flex-start; }
 .taille-gauche { flex: 1; min-width: 0; }
 .bebe-box {
-  flex: 0 0 96px;
+  flex: 1;
   display: flex; align-items: flex-end; justify-content: center;
-  height: 150px;
   background: var(--paper);
   border-radius: 3px;
-  padding: 8px;
+  padding: 10px;
 }
 .bebe { display: flex; align-items: flex-end; }
 .bebe svg {
-  height: calc(var(--k) * 132px);
+  height: calc(var(--k) * 200px);
   width: auto;
   transition: height .25s cubic-bezier(.2, .8, .3, 1);
 }
@@ -703,3 +701,118 @@ body.admin { --paper: #E4E7EA; }
 .bar .track { flex: 1; height: 18px; background: var(--paper); border-radius: 2px; overflow: hidden; }
 .bar .fill { height: 100%; background: var(--accent); transition: width .35s ease; }
 .bar .n { flex: 0 0 24px; font: 400 12px/1 var(--mono); color: var(--ink-soft); }
+
+
+/* ============================================================================
+   Barre de navigation
+   ============================================================================ */
+
+.barre {
+  margin: 0 -16px 18px;
+  background: var(--ink);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.barre::-webkit-scrollbar { display: none; }
+.barre-in { display: flex; gap: 2px; padding: 0 12px; min-width: max-content; }
+
+.onglet {
+  padding: 13px 13px;
+  font: 500 13px/1 var(--body);
+  color: rgba(252, 253, 251, .62);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.onglet:hover { color: var(--card); }
+.onglet.actif { color: var(--card); border-bottom-color: var(--accent); }
+
+/* ============================================================================
+   Jauge verticale de la taille
+   ============================================================================ */
+
+.taille-wrap { display: flex; gap: 14px; align-items: stretch; height: 270px; }
+
+.curseur-v { position: relative; width: 58px; flex: 0 0 58px; }
+.curseur-v .piste-v {
+  position: absolute; left: 16px; top: 0; bottom: 0; width: 24px;
+  border-radius: 20px;
+  background: linear-gradient(0deg, #D7E3D2 0%, #9CC39B 38%, #5E9A6B 70%, #2E6B44 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .18);
+}
+.curseur-v.vierge .piste-v { filter: saturate(.35); }
+.curseur-v .pastille-c {
+  position: absolute; left: 28px;
+  width: 32px; height: 32px;
+  margin: 0 0 -16px -16px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 5px solid var(--ink);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .28);
+  transition: bottom .1s linear;
+  pointer-events: none;
+  z-index: 3;
+}
+.curseur-v.vierge .pastille-c { border-color: var(--ink-soft); opacity: .7; }
+
+/* L'input pivote d'un quart de tour : glissement et clavier restent natifs. */
+.curseur-v input[type=range] {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 270px; height: 58px;
+  margin: -29px 0 0 -135px;
+  transform: rotate(-90deg);
+  background: none; opacity: 0;
+  -webkit-appearance: none; appearance: none;
+  cursor: grab;
+  z-index: 4;
+}
+.curseur-v input[type=range]:active { cursor: grabbing; }
+.curseur-v input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; }
+
+.gradus-v { position: absolute; left: 0; top: 0; bottom: 0; width: 14px; }
+.gradu-v { position: absolute; right: 0; transform: translateY(50%); display: flex; align-items: center; gap: 3px; }
+.gradu-v i { display: block; width: 5px; height: 1px; background: var(--rule); }
+.gradu-v em {
+  font: 400 10px/1 var(--mono); font-style: normal; color: var(--ink-soft);
+  position: absolute; right: 8px;
+}
+
+.taille-legende {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font: 400 12px/1.3 var(--body); color: var(--ink-soft);
+  padding: 4px 0;
+}
+
+.regle-borne { margin-top: 12px; font-size: 13px; }
+
+/* ============================================================================
+   Livre d'or
+   ============================================================================ */
+
+.avertissement {
+  margin-top: 20px; padding: 14px 16px;
+  background: #FBF2D8;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+  font-size: 14.5px;
+}
+.mot.depose { border-left-color: var(--accent); background: var(--paper); }
+
+.ligne-gens {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid var(--rule);
+}
+.gens-id { flex: 1; min-width: 0; }
+.gens-id strong { display: block; font-size: 15px; }
+.gens-id span { font: 400 12px/1.4 var(--mono); color: var(--ink-soft); word-break: break-all; }
+.ligne-gens input { flex: 0 0 140px; padding: 9px 10px; font-size: 15px; }
+
+section.nue {
+  border: none;
+  background: transparent;
+  padding: 60px 0;
+  max-width: 360px;
+  margin: 0 auto;
+}

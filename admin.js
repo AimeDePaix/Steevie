@@ -41,9 +41,12 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-resultat', 's-bilan', 's-envoi'].forEach(function (i) { show(i, true); });
+      ['s-etat', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-envoi']
+        .forEach(function (i) { show(i, true); });
       dessinerEtat();
       dessinerChamps();
+      dessinerGens();
+      dessinerMessages();
     })
     .catch(function () {
       show('s-cle', true);
@@ -88,9 +91,42 @@ function bloc(v, t) {
        + '<span class="stat-t">' + t + '</span></div>';
 }
 
+function dessinerGens() {
+  $('gens').innerHTML = (ETAT.gens || []).map(function (g) {
+    return '<div class="ligne-gens">'
+      + '<div class="gens-id"><strong>' + g.nom + '</strong><span>' + g.email + '</span></div>'
+      + '<input type="text" maxlength="14" value="' + (g.pseudo || '') + '" data-t="'
+      +   g.token + '" placeholder="sans pseudo">'
+      + '<button class="cadeau-btn" data-t="' + g.token + '">OK</button>'
+      + '</div>';
+  }).join('') || '<p class="sub">Personne n\'est encore inscrit.</p>';
+
+  document.querySelectorAll('#gens button').forEach(function (b) {
+    b.onclick = function () {
+      var champ = document.querySelector('#gens input[data-t="' + b.dataset.t + '"]');
+      poster({ action: 'admin_pseudo', token: b.dataset.t, pseudo: champ.value },
+        function () { b.textContent = '✓'; setTimeout(function () { b.textContent = 'OK'; }, 1500); });
+    };
+  });
+}
+
+function dessinerMessages() {
+  var m = ETAT.messages || [];
+  $('messages-sub').textContent = m.length
+    ? m.length + ' message' + (m.length > 1 ? 's' : '') + ' déposé'
+      + (m.length > 1 ? 's' : '') + '. Personne d\'autre que vous ne les voit.'
+    : 'Aucun message pour l\'instant.';
+  $('messages').innerHTML = m.map(function (x) {
+    return '<div class="mot"><div class="mot-texte">' + x.texte.replace(/\n/g, '<br>')
+      + '</div><div class="mot-sign">— ' + x.pseudo + ', pour '
+      + (x.pour === 'parents' ? 'les parents' : 'Steevie')
+      + '<span class="mot-date">' + x.date + '</span></div></div>';
+  }).join('');
+}
+
 function dessinerChamps() {
   CHAMPS.forEach(function (c) {
-    if (c.cle === 'heure') c.opts = STV_CRENEAUX.map(function (x) { return [x.cle, x.cle]; });
+    if (c.cle === 'heure') c.opts = STV_CRENEAUX.map(function (x) { return [x.cle, x.libelle]; });
     if (c.cle === 'ascendant') c.opts = STV_SIGNES.map(function (x) { return [x, x]; });
     if (c.cle === 'coupe') c.opts = STV_COUPE.map(function (x) { return [x.cle, x.libelle]; });
   });
