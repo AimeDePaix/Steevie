@@ -15,13 +15,16 @@ var TK = {
   rule: '#CBD5C7',
   accent: '#D9A31E',
   fille: '#A8497A',
-  garcon: '#2E7D74'
+  garcon: '#2E7D74',
+  ok: '#2F7D4F',
+  rate: '#B6BDB7'
 };
 
-function dessinerTicket(canvas, cfg, pseudo, prono, questions) {
+function dessinerTicket(canvas, cfg, pseudo, prono, questions, resultat) {
   var dpr = Math.min(window.devicePixelRatio || 1, 3);
   var lignes = questions.filter(function (q) { return (prono.mises[q.cle] || 0) > 0; });
   var H = 210 + lignes.length * 46 + 140;
+  var joue = !!(resultat && resultat.date);   // la naissance a eu lieu
 
   canvas.width = TK.L * dpr;
   canvas.height = H * dpr;
@@ -58,38 +61,53 @@ function dessinerTicket(canvas, cfg, pseudo, prono, questions) {
 
   /* --- lignes de pari --- */
   y = 176;
+  // Colonnes : sans résultat on affiche le gain potentiel ; une fois la
+  // naissance connue, une colonne « obtenu » s'ajoute à droite.
+  var xCote = TK.L - M - (joue ? 330 : 190);
+  var xMise = TK.L - M - (joue ? 250 : 100);
+  var xPot  = TK.L - M - (joue ? 130 : 0);
+  var xObt  = TK.L - M;
+  var largeurPari = joue ? 250 : 300;
+
   c.font = '500 13px "DM Mono", monospace';
   c.fillStyle = TK.soft;
   c.fillText('PARI', M, y - 22);
   c.textAlign = 'right';
-  c.fillText('COTE', TK.L - M - 190, y - 22);
-  c.fillText('MISE', TK.L - M - 100, y - 22);
-  c.fillText('GAIN', TK.L - M, y - 22);
+  c.fillText('COTE', xCote, y - 22);
+  c.fillText('MISE', xMise, y - 22);
+  c.fillText(joue ? 'POTENTIEL' : 'GAIN', xPot, y - 22);
+  if (joue) c.fillText('OBTENU', xObt, y - 22);
   c.textAlign = 'left';
 
-  var total = 0;
+  var total = 0, gagne = 0;
 
   lignes.forEach(function (q) {
     var mise = prono.mises[q.cle] || 0;
     var cote = prono.cotes[q.cle] || 0;
     var gain = Math.round(mise * cote);
+    var bon = joue && prono.reponses[q.cle] && prono.reponses[q.cle] === resultat[q.cle];
     total += gain;
+    if (bon) gagne += gain;
 
-    c.fillStyle = TK.ink;
+    c.fillStyle = bon ? TK.ok : TK.ink;
     c.font = '400 20px Karla, sans-serif';
-    c.fillText(tronque(c, libelleReponse(cfg, q.cle, prono.reponses[q.cle]), 300), M, y);
+    c.fillText(tronque(c, libelleReponse(cfg, q.cle, prono.reponses[q.cle]), largeurPari), M, y);
 
     c.fillStyle = TK.soft;
     c.font = '400 14px Karla, sans-serif';
-    c.fillText(q.titre.length > 34 ? q.titre.slice(0, 33) + '…' : q.titre, M, y + 19);
+    c.fillText(q.titre.length > 30 ? q.titre.slice(0, 29) + '…' : q.titre, M, y + 19);
 
     c.textAlign = 'right';
     c.font = '400 18px "DM Mono", monospace';
     c.fillStyle = TK.soft;
-    c.fillText(stvFmtCote(cote), TK.L - M - 190, y);
-    c.fillText(mise + '', TK.L - M - 100, y);
-    c.fillStyle = TK.ink;
-    c.fillText(gain + ' pts', TK.L - M, y);
+    c.fillText(stvFmtCote(cote), xCote, y);
+    c.fillText(mise + '', xMise, y);
+    c.fillText(gain + ' pts', xPot, y);
+    if (joue) {
+      c.fillStyle = bon ? TK.ok : TK.rate;
+      c.font = '500 18px "DM Mono", monospace';
+      c.fillText(bon ? gain + ' pts' : '0', xObt, y);
+    }
     c.textAlign = 'left';
 
     y += 46;
@@ -101,12 +119,16 @@ function dessinerTicket(canvas, cfg, pseudo, prono, questions) {
 
   c.fillStyle = TK.soft;
   c.font = '500 15px "DM Mono", monospace';
-  c.fillText('GAIN MAXIMUM SI TOUT TOMBE', M, y);
+  c.fillText(joue ? 'TOTAL REMPORTÉ' : 'GAIN MAXIMUM SI TOUT TOMBE', M, y);
+  if (joue) {
+    c.font = '400 13px "DM Mono", monospace';
+    c.fillText('sur ' + total.toLocaleString('fr-FR') + ' pts possibles', M, y + 20);
+  }
 
-  c.fillStyle = TK.ink;
+  c.fillStyle = joue ? TK.ok : TK.ink;
   c.font = '600 46px Fraunces, Georgia, serif';
   c.textAlign = 'right';
-  c.fillText(total.toLocaleString('fr-FR') + ' pts', TK.L - M, y + 8);
+  c.fillText((joue ? gagne : total).toLocaleString('fr-FR') + ' pts', TK.L - M, y + 8);
   c.textAlign = 'left';
 
   /* --- pied --- */
@@ -115,7 +137,10 @@ function dessinerTicket(canvas, cfg, pseudo, prono, questions) {
 
   c.fillStyle = TK.soft;
   c.font = '400 15px Karla, sans-serif';
-  c.fillText('Terme le ' + frDate(cfg.terme) + ' · pronostics clos le ' + frDate(cfg.cloture),
+  c.fillText(joue
+    ? (resultat.prenom || 'Steevie') + ', né' + (resultat.sexe === 'F' ? 'e' : '')
+      + ' le ' + frDate(resultat.date)
+    : 'Terme le ' + frDate(cfg.terme) + ' · pronostics clos le ' + frDate(cfg.cloture),
              M, y + 76);
 }
 
@@ -173,8 +198,8 @@ function frDate(iso) {
   if (!iso) return '';
   var m = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
            'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-  var p = String(iso).split('-');
-  return Number(p[2]) + ' ' + m[Number(p[1]) - 1];
+  var p = String(iso).split('-'), j = Number(p[2]);
+  return (j === 1 ? '1er' : j) + ' ' + m[Number(p[1]) - 1];
 }
 
 

@@ -19,7 +19,6 @@ var CHAMPS = [
   { cle: 'heure_exacte', label: 'L\'heure exacte',       type: 'heure' },
   { cle: 'poids',        label: 'Le poids en grammes',   type: 'nombre', ph: '3400' },
   { cle: 'taille',       label: 'La taille en cm',       type: 'nombre', ph: '50' },
-  { cle: 'lettre',       label: 'Première lettre',       type: 'texte', ph: 'L' },
   { cle: 'coupe',        label: 'La coupe',              type: 'choix', opts: [] }
 ];
 
@@ -42,7 +41,7 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-envoi']
+      ['s-etat', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
       dessinerEtat();
       dessinerChamps();
@@ -150,25 +149,40 @@ function dessinerChamps() {
   }).join('')
   + '<div class="deduit" id="deduit"></div>';
 
-  ['r-date', 'r-heure_exacte'].forEach(function (id) { $(id).oninput = majDeduit; });
+  ['r-date', 'r-heure_exacte', 'r-prenom'].forEach(function (id) { $(id).oninput = majDeduit; });
   majDeduit();
 }
 
 /* Le créneau et l'ascendant se calculent sous tes yeux, avec la même
    formule que le jeu : rien à deviner, rien à saisir. */
 function majDeduit() {
-  var d = $('r-date').value, h = $('r-heure_exacte').value;
-  if (!d || !h) {
-    $('deduit').innerHTML = '<span class="mini-note">Renseigne le jour et l\'heure exacte : le '
-      + 'créneau et l\'ascendant se calculeront tout seuls.</span>';
-    return;
+  var d = $('r-date').value, h = $('r-heure_exacte').value, pr = $('r-prenom').value;
+  var l = [];
+
+  var ini = initialeDe(pr);
+  l.push('Première lettre : <strong>' + (ini || '—') + '</strong>'
+    + (ini ? ' <span class="mini-note">(déduite du prénom)</span>' : ''));
+
+  if (d && h) {
+    var cr = stvCreneauDe(h);
+    var lib = STV_CRENEAUX.filter(function (x) { return x.cle === cr; })[0];
+    var asc = stvAscendantNaissance(ETAT.config, d, h);
+    l.push('Créneau : <strong>' + (lib ? lib.libelle : '—') + '</strong>');
+    l.push('Ascendant : <strong>' + asc + '</strong> — ' + (STV_CARACTERES[asc] || ''));
+  } else {
+    l.push('<span class="mini-note">Renseigne le jour et l\'heure exacte : le créneau et '
+      + 'l\'ascendant se calculeront tout seuls.</span>');
   }
-  var cfg = ETAT.config;
-  var cr = stvCreneauDe(h);
-  var lib = STV_CRENEAUX.filter(function (x) { return x.cle === cr; })[0];
-  var asc = stvAscendantNaissance(cfg, d, h);
-  $('deduit').innerHTML = 'Créneau : <strong>' + (lib ? lib.libelle : '—') + '</strong>'
-    + '<br>Ascendant : <strong>' + asc + '</strong> — ' + (STV_CARACTERES[asc] || '');
+  $('deduit').innerHTML = l.join('<br>');
+}
+
+/* Même règle que pour les joueurs : accents ramenés à la lettre nue, et
+   prénom composé pris sur son premier élément. */
+function initialeDe(prenom) {
+  var p = String(prenom || '').trim();
+  if (!p) return '';
+  var c = p.normalize('NFD').replace(/[\u0300-\u036f]/g, '').charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : '';
 }
 
 $('btn-resultat').onclick = function () {
@@ -210,6 +224,23 @@ $('btn-bilan').onclick = function () {
       });
       $('bilan').innerHTML = h + '</div>';
     });
+};
+
+$('btn-reset-resultat').onclick = function () {
+  if (!confirm('Effacer la naissance saisie et rouvrir le jeu ? Les pronostics sont conservés.')) return;
+  poster({ action: 'admin_reset', quoi: 'resultat' }, function (d) {
+    $('reset-msg').textContent = d.message;
+    entrer();
+  });
+};
+
+$('btn-reset-tout').onclick = function () {
+  if (!confirm('Effacer TOUS les pronostics, les mots et les progressions ? Irréversible.')) return;
+  if (!confirm('Vraiment ? Tout le monde devra rejouer depuis le début.')) return;
+  poster({ action: 'admin_reset', quoi: 'pronos' }, function (d) {
+    $('reset-msg').textContent = d.message;
+    entrer();
+  });
 };
 
 $('btn-test').onclick = function () {

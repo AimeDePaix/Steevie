@@ -13,7 +13,7 @@ var PARAMS = new URLSearchParams(location.search);
 var TOKEN = PARAMS.get('t') || '';
 var VUE = PARAMS.get('vue') || '';
 
-var CFG = null, MOI = null, PHASE = 'open';
+var CFG = null, MOI = null, PHASE = 'open', RESULTAT = null;
 var R = {}, MISES = {}, CALC = null;
 var NIVEAU = '';               // '', 'regles', 'indices', 'pronos', 'fini'
 var ORDRE = ['', 'regles', 'indices', 'pronos', 'fini'];
@@ -36,6 +36,8 @@ var ETAPES = [
   { id: 's-quiz',      n: 4, nom: 'Les indices' },
   { id: 's-form',      n: 5, nom: 'Tes pronostics' }
 ];
+
+var MISE_MINI = 5;
 
 var $ = function (id) { return document.getElementById(id); };
 var show = function (id, on) { var e = $(id); if (e) e.classList.toggle('hidden', !on); };
@@ -645,6 +647,8 @@ function majMise(d, q) {
 function bouger(cle, dv) {
   if (CALC && CALC.patate) return;
   var v = Math.max(0, (MISES[cle] || 0) + dv);
+  // on ne peut pas redescendre entre 1 et 4 jetons : c'est 0 ou au moins 5
+  if (v > 0 && v < MISE_MINI) v = dv < 0 ? 0 : MISE_MINI;
   if (dv > 0 && restant() <= 0) return;
   MISES[cle] = v;
   show('manques', false);
@@ -670,14 +674,17 @@ function majSolde() {
     $('solde').classList.remove('plein');
     return;
   }
-  var r = restant(), manque = manquantes();
+  var r = restant(), manque = manquantes(), faibles = sousMisees();
   $('solde-jetons').textContent = manque.length
     ? manque.length + ' réponse' + (manque.length > 1 ? 's' : '') + ' à donner'
       + (r > 0 ? ', ' + r + ' jetons à placer' : '')
-    : (r > 0 ? r + ' jeton' + (r > 1 ? 's' : '') + ' à placer' : 'Tout est prêt');
+    : r > 0 ? r + ' jeton' + (r > 1 ? 's' : '') + ' à placer'
+    : faibles.length ? faibles.length + ' question' + (faibles.length > 1 ? 's' : '')
+        + ' sous le minimum de ' + MISE_MINI + ' jetons'
+    : 'Tout est prêt';
   var g = gainMaximum();
   $('solde-gain').textContent = g ? 'Gain maximum : ' + g.toLocaleString('fr-FR') + ' pts' : 'Place tes jetons pour voir ton gain';
-  $('solde').classList.toggle('plein', !manque.length && r === 0);
+  $('solde').classList.toggle('plein', !manque.length && r === 0 && !sousMisees().length);
 }
 
 
@@ -688,6 +695,13 @@ function majSolde() {
 /* Les questions sans réponse. */
 function manquantes() {
   return QUESTIONS.filter(function (q) { return !choisiDe(q.cle); });
+}
+
+/* Les questions qui n'ont pas leur mise minimale. Pas de tapis intégral :
+   chaque question reçoit au moins cinq jetons, donc 65 au maximum sur une
+   seule, les 35 autres étant répartis sur les sept restantes. */
+function sousMisees() {
+  return QUESTIONS.filter(function (q) { return (MISES[q.cle] || 0) < MISE_MINI; });
 }
 
 function listeFr(mots) {
@@ -718,11 +732,21 @@ function verifier() {
   }
   if (r > 0) lignes.push('Il te reste ' + r + ' jeton' + (r > 1 ? 's' : '') + ' à placer.');
 
+  if (!manque.length) {
+    var faibles = sousMisees();
+    if (faibles.length) {
+      lignes.push('Chaque question doit recevoir au moins ' + MISE_MINI + ' jetons. Il en manque sur : '
+        + listeFr(faibles.map(function (q) { return q.court; })) + '.');
+      faibles.forEach(function (q) { $('q-' + q.cle).classList.add('manque'); });
+    }
+  }
+
   if (!lignes.length) { show('manques', false); return true; }
 
   $('manques').innerHTML = lignes.map(function (l) { return '<p>' + l + '</p>'; }).join('');
   show('manques', true);
-  var cible = manque.length ? $('q-' + manque[0].cle) : $('manques');
+  var premier = manque[0] || sousMisees()[0];
+  var cible = premier ? $('q-' + premier.cle) : $('manques');
   cible.scrollIntoView({ behavior: 'smooth', block: 'center' });
   return false;
 }
@@ -783,8 +807,21 @@ function allerTicket() {
 
 function montrerTicket(prono) {
   etape('s-ticket', 'ticket');
-  dessinerTicket($('ticket-canvas'), CFG, MOI.pseudo, prono, QUESTIONS);
+  dessinerTicket($('ticket-canvas'), CFG, MOI.pseudo, prono, QUESTIONS, RESULTAT);
   show('btn-edit', PHASE === 'open');
+
+  // Après la naissance, le ticket gagne une colonne « obtenu ». On va
+  // chercher le résultat réel, puis on le redessine.
+  if (PHASE === 'revealed' && !RESULTAT) {
+    fetch(API + '?action=board&t=' + encodeURIComponent(TOKEN))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok || !d.resultat) return;
+        RESULTAT = d.resultat;
+        dessinerTicket($('ticket-canvas'), CFG, MOI.pseudo, prono, QUESTIONS, RESULTAT);
+      })
+      .catch(function () {});
+  }
 }
 
 $('btn-edit').onclick = function () { allerFormulaire(); };

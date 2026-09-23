@@ -111,8 +111,8 @@ footer { text-align: center; padding: 24px 0; font: 400 13px/1.6 var(--mono); co
   <!-- porte d'entrée -->
   <section id="verrou">
     <h2>Pas encore ouverte</h2>
-    <p class="sub">La liste se prépare. Si les parents t'ont donné le code, tu
-      peux jeter un œil en avant-première.</p>
+    <p class="sub">Le code s'obtient auprès des parents. Un petit message et
+      il est à toi.</p>
     <input type="password" id="code" placeholder="Code d'accès" autocomplete="off">
     <button class="cta" id="btn-code" style="margin-top:12px">Entrer</button>
     <p class="erreur hidden" id="code-err"></p>
@@ -123,10 +123,10 @@ footer { text-align: center; padding: 24px 0; font: 400 13px/1.6 var(--mono); co
     <p class="accroche">Steevie arrive léger.</p>
     <p>Il n'a ni vêtements, ni lit, ni la moindre opinion sur la décoration de
       sa chambre. Si vous voulez l'aider à s'installer, voilà de quoi piocher.</p>
-    <p>Réserver un cadeau le met de côté pour vous seul. On ne voit pas qui a
-      réservé quoi, alors gardez la surprise.</p>
-    <div class="apercu"><strong>Aperçu</strong> — les articles ci-dessous sont
-      des exemples et le bouton de réservation n'est pas encore branché.</div>
+    <div class="apercu"><strong>Avant d'acheter, écrivez-nous.</strong> Dites-nous
+      ce qui vous tente, on raye l'article de la liste dans la foulée. Ça évite
+      les doublons, et ça nous fait une occasion de vous parler. Les articles
+      barrés sont déjà pris.</div>
   </section>
 
   <section id="articles" class="hidden">
@@ -144,9 +144,11 @@ footer { text-align: center; padding: 24px 0; font: 400 13px/1.6 var(--mono); co
 <script>
 /* --- réglages ----------------------------------------------------------- */
 
-var CODE = '1925';
+var CODE = 'Merciàtoi';
 
 var CADEAUX = [
+/* Pour rayer un article quand quelqu'un vous l'a réservé : passez son « r »
+   de false à true. Pour en ajouter un : recopiez une ligne. */
   { n: 'Gigoteuse 0-6 mois',            p: 39,  c: 'Dormir',      e: '🌙', r: false },
   { n: 'Veilleuse à intensité douce',   p: 29,  c: 'Dormir',      e: '💡', r: true  },
   { n: 'Draps housse en lin, lot de 2', p: 45,  c: 'Dormir',      e: '🛏️', r: false },
@@ -190,8 +192,7 @@ function rendre() {
       + '<div class="vignette">' + g.e + '</div>'
       + '<div class="corps"><div class="nom">' + g.n + '</div>'
       +   '<div class="meta">' + g.c + ' · ' + g.p + ' €</div></div>'
-      + (g.r ? '<span class="etat">Réservé</span>'
-             : '<button class="btn">Réserver</button>')
+      + (g.r ? '<span class="etat">Déjà pris</span>' : '')
       + '</div>';
   }).join('');
 
@@ -202,9 +203,6 @@ function rendre() {
 
   document.querySelectorAll('.filtre').forEach(function (b) {
     b.onclick = function () { filtre = b.dataset.c; rendre(); };
-  });
-  document.querySelectorAll('.btn').forEach(function (b) {
-    b.onclick = function () { b.textContent = 'Bientôt disponible'; b.disabled = true; };
   });
 }
 
