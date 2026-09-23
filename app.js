@@ -373,12 +373,8 @@ function choisir(cle, v) {
   if (cle === 'date') R.date = (v === 'avant' || v === 'apres') ? v : stvJourVersDate(CFG, Number(v));
   else R[cle] = v;
 
-  if (cle === 'sexe' && v === 'P') {
-    MISES = { sexe: CFG.jetons };
-    Object.keys(R).forEach(function (k) { if (k !== 'sexe') delete R[k]; });
-  } else if (cle === 'sexe' && CALC && CALC.patate) {
-    MISES = {};
-  }
+  // Choisir la pomme de terre grise le formulaire mais n'efface rien : en
+  // revenant à fille ou garçon, on retrouve toutes ses réponses.
   show('manques', false);
   rafraichir();
 }
@@ -428,7 +424,7 @@ function jaugePoids(zone, cotes, choisi) {
     +   '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" aria-label="Poids">'
     + '</div>'
     + bornesPoids(opts.length)
-    + '<div class="jauge-bornes"><span>🦐 une crevette</span><span>pilier du Stade Toulousain 🏉</span></div>'
+    + '<div class="jauge-bornes"><span>🫛 petit poids</span><span>pilier du Stade Toulousain 🏉</span></div>'
     + '<div class="choix-ligne avec-icone">'
     +   '<span class="icone-poids" style="--p:' + echelle(i, opts.length) + '">' + poidsSVG() + '</span>'
     +   '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
@@ -468,15 +464,16 @@ function jaugeTaille(zone, cotes, choisi) {
   });
 
   zone.innerHTML =
-      '<div class="taille-wrap">'
+      '<div class="taille-legende">déjà grand ↑</div>'
+    + '<div class="taille-wrap">'
     +   '<div class="curseur-v' + (pose ? '' : ' vierge') + '">'
-    +     '<div class="piste-v"><div class="pastille-c" style="bottom:' + centre(i, opts.length) + '%"></div></div>'
     +     '<div class="gradus-v">' + gradus + '</div>'
+    +     '<div class="piste-v"><div class="pastille-c" style="bottom:' + centre(i, opts.length) + '%"></div></div>'
     +     '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" aria-label="Taille">'
     +   '</div>'
     +   '<div class="bebe-box"><div class="bebe" style="--k:' + k + '">' + bebeSVG(R.sexe) + '</div></div>'
-    +   '<div class="taille-legende"><div>déjà grand</div><div>tout petit</div></div>'
     + '</div>'
+    + '<div class="taille-legende">format Paolini ↓</div>'
     + '<div class="choix-ligne">'
     +   '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
     +   (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
@@ -500,28 +497,45 @@ function brancherCurseur(zone, opts, cle, vertical) {
   input.onchange = function () { choisir(cle, opts[Number(input.value)].v); };
 }
 
-/* Horloge de 24 heures, six quartiers, du bleu nuit au jaune plein jour. */
+/* Horloge de 24 heures. Les heures pleines sont posées sur le pourtour, comme
+   un cadran ; chaque quartier ne porte que sa cote ; le créneau choisi
+   s'affiche en entier au centre, sur deux lignes pour tenir dans le cercle. */
 function horloge(zone, cotes, choisi) {
-  var R0 = 52, R1 = 96, cx = 110, cy = 110, s = '';
+  var R0 = 58, R1 = 100, cx = 130, cy = 130, s = '';
 
-  STV_CRENEAUX.forEach(function (c) {
+  // Le quartier choisi est dessiné en dernier, pour que son contour passe
+  // par-dessus ceux de ses voisins.
+  var ordre = STV_CRENEAUX.filter(function (c) { return c.cle !== choisi; })
+    .concat(STV_CRENEAUX.filter(function (c) { return c.cle === choisi; }));
+
+  ordre.forEach(function (c) {
     var a0 = c.debut / 24 * 360 - 90, a1 = c.fin / 24 * 360 - 90;
     s += '<path class="quartier' + (choisi === c.cle ? ' sel' : '') + '" data-v="' + c.cle
        + '" d="' + arc(cx, cy, R0, R1, a0, a1) + '" fill="' + c.couleur + '"></path>';
     var am = (a0 + a1) / 2 * Math.PI / 180, rm = (R0 + R1) / 2;
-    var x = (cx + rm * Math.cos(am)).toFixed(1), y = (cy + rm * Math.sin(am)).toFixed(1);
-    s += '<text class="q-lab' + (c.nuit ? ' clair' : '') + '" x="' + x + '" y="' + (y - 4) + '">'
-       + c.libelle.replace(/ /g, '') + '</text>'
-       + '<text class="q-cote' + (c.nuit ? ' clair' : '') + '" x="' + x + '" y="' + (Number(y) + 11) + '">'
-       + stvFmtCote(cotes[c.cle]) + '</text>';
+    s += '<text class="q-cote' + (c.nuit ? ' clair' : '') + '" x="' + (cx + rm * Math.cos(am)).toFixed(1)
+       + '" y="' + (cy + rm * Math.sin(am) + 5).toFixed(1) + '">' + stvFmtCote(cotes[c.cle]) + '</text>';
+
+    // l'heure pleine, à l'extérieur, au début de chaque quartier
+    var ab = a0 * Math.PI / 180, re = R1 + 15;
+    s += '<text class="h-rim" x="' + (cx + re * Math.cos(ab)).toFixed(1) + '" y="'
+       + (cy + re * Math.sin(ab) + 4).toFixed(1) + '">' + c.debut + 'h</text>';
   });
 
-  zone.innerHTML = '<div class="horloge"><svg viewBox="0 0 220 220">' + s
-    + '<circle cx="110" cy="110" r="46" fill="var(--card)"/>'
-    + (choisi
-        ? '<text class="h-centre" x="110" y="106">' + libelleCreneau(choisi) + '</text>'
-          + '<text class="h-sous" x="110" y="124">ton pari</text>'
-        : '<text class="h-sous" x="110" y="114">choisis un quartier</text>')
+  var centreTxt;
+  if (choisi) {
+    var cr = STV_CRENEAUX.filter(function (x) { return x.cle === choisi; })[0];
+    var fin = (cr.fin - 1) + 'h59';
+    centreTxt = '<text class="h-petit" x="130" y="111">de</text>'
+      + '<text class="h-centre" x="130" y="133">' + cr.debut + 'h à ' + fin + '</text>'
+      + '<text class="h-petit" x="130" y="153">ton pari</text>';
+  } else {
+    centreTxt = '<text class="h-petit" x="130" y="126">choisis</text>'
+      + '<text class="h-petit" x="130" y="142">un quartier</text>';
+  }
+
+  zone.innerHTML = '<div class="horloge"><svg viewBox="0 0 260 260">' + s
+    + '<circle cx="130" cy="130" r="' + (R0 - 2) + '" fill="var(--card)"/>' + centreTxt
     + '</svg></div>';
 
   zone.querySelectorAll('.quartier').forEach(function (p) {
@@ -650,6 +664,12 @@ function gainMaximum() {
 }
 
 function majSolde() {
+  if (R.sexe === 'P') {
+    $('solde-jetons').textContent = 'Choisis fille ou garçon pour continuer';
+    $('solde-gain').textContent = 'Le tubercule n\'est pas une option';
+    $('solde').classList.remove('plein');
+    return;
+  }
   var r = restant(), manque = manquantes();
   $('solde-jetons').textContent = manque.length
     ? manque.length + ' réponse' + (manque.length > 1 ? 's' : '') + ' à donner'
@@ -665,9 +685,8 @@ function majSolde() {
    Contrôle avant validation
    -------------------------------------------------------------------------- */
 
-/* Les questions sans réponse. Avec la pomme de terre, seul le sexe compte. */
+/* Les questions sans réponse. */
 function manquantes() {
-  if (R.sexe === 'P') return [];
   return QUESTIONS.filter(function (q) { return !choisiDe(q.cle); });
 }
 
@@ -677,6 +696,17 @@ function listeFr(mots) {
 }
 
 function verifier() {
+  QUESTIONS.forEach(function (q) { $('q-' + q.cle).classList.remove('manque'); });
+
+  if (R.sexe === 'P') {
+    $('manques').innerHTML = '<p>Bien tenté, mais l\'échographie est formelle : Steevie n\'est '
+      + 'pas un tubercule. Choisis entre fille ou garçon pour poursuivre le jeu.</p>';
+    show('manques', true);
+    $('q-sexe').classList.add('manque');
+    $('q-sexe').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+
   var manque = manquantes(), r = restant(), lignes = [];
 
   QUESTIONS.forEach(function (q) { $('q-' + q.cle).classList.remove('manque'); });
@@ -806,14 +836,14 @@ var MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
 
 function jolieDate(iso) {
   if (!iso) return '';
-  var p = String(iso).split('-');
-  return Number(p[2]) + ' ' + MOIS[Number(p[1]) - 1] + ' ' + p[0];
+  var p = String(iso).split('-'), j = Number(p[2]);
+  return (j === 1 ? '1er' : j) + ' ' + MOIS[Number(p[1]) - 1] + ' ' + p[0];
 }
 
 var MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
                    'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
 function courteDate(iso) {
-  var p = String(iso).split('-');
-  return Number(p[2]) + ' ' + MOIS_COURTS[Number(p[1]) - 1];
+  var p = String(iso).split('-'), j = Number(p[2]);
+  return (j === 1 ? '1er' : j) + ' ' + MOIS_COURTS[Number(p[1]) - 1];
 }

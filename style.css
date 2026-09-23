@@ -117,7 +117,8 @@ label.q {
   color: var(--ink-soft);
 }
 
-input[type=text], input[type=date], input[type=email], input[type=time], select {
+input[type=text], input[type=date], input[type=email], input[type=time],
+input[type=number], select {
   width: 100%;
   padding: 13px 12px;
   border: 1px solid var(--rule);
@@ -373,39 +374,21 @@ input[type=text], input[type=date], input[type=email], input[type=time], select 
 }
 .choix-cote { font: 400 13px/1 var(--mono); color: var(--ink-soft); }
 
-/* --- taille : curseur et bébé côte à côte ------------------------------- */
-
-.taille-wrap { display: flex; gap: 16px; align-items: flex-start; }
-.taille-gauche { flex: 1; min-width: 0; }
-.bebe-box {
-  flex: 1;
-  display: flex; align-items: flex-end; justify-content: center;
-  background: var(--paper);
-  border-radius: 3px;
-  padding: 10px;
-}
-.bebe { display: flex; align-items: flex-end; }
-.bebe svg {
-  height: calc(var(--k) * 200px);
-  width: auto;
-  transition: height .25s cubic-bezier(.2, .8, .3, 1);
-}
-
 /* --- horloge ------------------------------------------------------------ */
 
-.horloge { max-width: 300px; margin: 0 auto; }
-.horloge svg { width: 100%; height: auto; }
+.horloge { max-width: 320px; margin: 0 auto; }
+.horloge svg { width: 100%; height: auto; display: block; }
 .quartier { cursor: pointer; opacity: .62; transition: opacity .15s; stroke: var(--card); stroke-width: 2; }
 .quartier:hover { opacity: .85; }
 .quartier.sel { opacity: 1; stroke: var(--ink); stroke-width: 3; }
-.q-lab  { font: 500 12px var(--mono); text-anchor: middle; fill: var(--ink); pointer-events: none; }
-.q-cote { font: 400 10px var(--mono); text-anchor: middle; fill: var(--ink); opacity: .78; pointer-events: none; }
-.q-lab.clair, .q-cote.clair { fill: #fff; }
+.q-cote { font: 500 15px var(--mono); text-anchor: middle; fill: var(--ink); pointer-events: none; }
+.q-cote.clair { fill: #fff; }
+.h-rim { font: 500 11px var(--mono); text-anchor: middle; fill: var(--ink-soft); pointer-events: none; }
 .h-centre {
-  font-family: var(--display); font-weight: 600; font-size: 19px;
+  font-family: var(--display); font-weight: 600; font-size: 17px;
   text-anchor: middle; fill: var(--ink);
 }
-.h-sous { font: 400 11px var(--mono); text-anchor: middle; fill: var(--ink-soft); }
+.h-petit { font: 400 11px var(--mono); text-anchor: middle; fill: var(--ink-soft); }
 
 /* --- mise --------------------------------------------------------------- */
 
@@ -501,8 +484,6 @@ footer {
 }
 
 @media (max-width: 460px) {
-  .taille-wrap { gap: 10px; }
-  .bebe-box { flex-basis: 76px; height: 130px; }
   .parents { gap: 8px; }
   .choix-ligne { flex-direction: column; gap: 2px; }
 }
@@ -710,14 +691,13 @@ body.admin { --paper: #E4E7EA; }
 .barre {
   margin: 0 -16px 18px;
   background: var(--ink);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
-.barre::-webkit-scrollbar { display: none; }
-.barre-in { display: flex; gap: 2px; padding: 0 12px; min-width: max-content; }
+/* Les six onglets passent à la ligne plutôt que de disparaître hors de
+   l'écran : tout reste visible, sur ordinateur comme sur téléphone. */
+.barre-in { display: flex; flex-wrap: wrap; gap: 0 2px; padding: 4px 10px; }
 
 .onglet {
-  padding: 13px 13px;
+  padding: 11px 10px;
   font: 500 13px/1 var(--body);
   color: rgba(252, 253, 251, .62);
   text-decoration: none;
@@ -729,20 +709,31 @@ body.admin { --paper: #E4E7EA; }
 
 /* ============================================================================
    Jauge verticale de la taille
+   Trois colonnes : les graduations (assez larges pour « 53 »), la piste, puis
+   le bébé, les pieds posés au sol et centré dans son cadre.
    ============================================================================ */
 
-.taille-wrap { display: flex; gap: 14px; align-items: stretch; height: 270px; }
+.taille-wrap { display: flex; gap: 14px; align-items: stretch; height: 260px; }
 
-.curseur-v { position: relative; width: 58px; flex: 0 0 58px; }
+.curseur-v { position: relative; flex: 0 0 76px; }
+.gradus-v { position: absolute; left: 0; top: 0; bottom: 0; width: 34px; }
+.gradu-v {
+  position: absolute; left: 0; width: 34px;
+  transform: translateY(50%);
+  display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+}
+.gradu-v em { font: 400 11px/1 var(--mono); font-style: normal; color: var(--ink-soft); }
+.gradu-v i { display: block; width: 6px; height: 1px; background: var(--rule); }
+
 .curseur-v .piste-v {
-  position: absolute; left: 16px; top: 0; bottom: 0; width: 24px;
+  position: absolute; left: 42px; top: 0; bottom: 0; width: 24px;
   border-radius: 20px;
   background: linear-gradient(0deg, #D7E3D2 0%, #9CC39B 38%, #5E9A6B 70%, #2E6B44 100%);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, .18);
 }
 .curseur-v.vierge .piste-v { filter: saturate(.35); }
 .curseur-v .pastille-c {
-  position: absolute; left: 28px;
+  position: absolute; left: 12px;
   width: 32px; height: 32px;
   margin: 0 0 -16px -16px;
   border-radius: 50%;
@@ -759,8 +750,8 @@ body.admin { --paper: #E4E7EA; }
 .curseur-v input[type=range] {
   position: absolute;
   left: 50%; top: 50%;
-  width: 270px; height: 58px;
-  margin: -29px 0 0 -135px;
+  width: 260px; height: 76px;
+  margin: -38px 0 0 -130px;
   transform: rotate(-90deg);
   background: none; opacity: 0;
   -webkit-appearance: none; appearance: none;
@@ -770,19 +761,28 @@ body.admin { --paper: #E4E7EA; }
 .curseur-v input[type=range]:active { cursor: grabbing; }
 .curseur-v input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; }
 
-.gradus-v { position: absolute; left: 0; top: 0; bottom: 0; width: 14px; }
-.gradu-v { position: absolute; right: 0; transform: translateY(50%); display: flex; align-items: center; gap: 3px; }
-.gradu-v i { display: block; width: 5px; height: 1px; background: var(--rule); }
-.gradu-v em {
-  font: 400 10px/1 var(--mono); font-style: normal; color: var(--ink-soft);
-  position: absolute; right: 8px;
+.bebe-box {
+  flex: 1; min-width: 0;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: var(--paper);
+  border-radius: 3px;
+  padding: 12px 12px 10px;
+  border-bottom: 3px solid var(--rule);
+  overflow: hidden;
+}
+.bebe { display: flex; align-items: flex-end; justify-content: center; height: 100%; }
+.bebe svg {
+  height: calc(var(--k) * 190px);
+  max-height: 100%;
+  width: auto;
+  transition: height .25s cubic-bezier(.2, .8, .3, 1);
 }
 
 .taille-legende {
-  flex: 0 0 auto;
-  display: flex; flex-direction: column; justify-content: space-between;
-  font: 400 12px/1.3 var(--body); color: var(--ink-soft);
-  padding: 4px 0;
+  margin: 6px 0;
+  padding-left: 18px;
+  font: 400 12px/1.3 var(--body);
+  color: var(--ink-soft);
 }
 
 .regle-borne { margin-top: 12px; font-size: 13px; }
@@ -864,3 +864,9 @@ section.nue {
 
 .chip.balai { border-style: dashed; }
 .chips.dates .chip { min-width: 62px; }
+
+.deduit {
+  margin-top: 6px; padding: 12px 14px;
+  background: var(--paper); border-radius: 3px;
+  font-size: 15px; line-height: 1.6;
+}

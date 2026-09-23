@@ -13,15 +13,14 @@ var $ = function (id) { return document.getElementById(id); };
 var show = function (id, on) { $(id).classList.toggle('hidden', !on); };
 
 var CHAMPS = [
-  { cle: 'prenom',    label: 'Le prénom',        type: 'texte' },
-  { cle: 'sexe',      label: 'Fille ou garçon',  type: 'choix', opts: [['F', 'Fille'], ['G', 'Garçon']] },
-  { cle: 'date',      label: 'Le jour',          type: 'date' },
-  { cle: 'poids',     label: 'Le poids en grammes', type: 'nombre', ph: '3400' },
-  { cle: 'taille',    label: 'La taille en cm',  type: 'nombre', ph: '50' },
-  { cle: 'lettre',    label: 'Première lettre',  type: 'texte', ph: 'L' },
-  { cle: 'heure',     label: 'Le créneau',       type: 'choix', opts: [] },
-  { cle: 'ascendant', label: 'L\'ascendant',     type: 'choix', opts: [] },
-  { cle: 'coupe',     label: 'La coupe',         type: 'choix', opts: [] }
+  { cle: 'prenom',       label: 'Le prénom',             type: 'texte' },
+  { cle: 'sexe',         label: 'Fille ou garçon',       type: 'choix', opts: [['F', 'Fille'], ['G', 'Garçon']] },
+  { cle: 'date',         label: 'Le jour',               type: 'date' },
+  { cle: 'heure_exacte', label: 'L\'heure exacte',       type: 'heure' },
+  { cle: 'poids',        label: 'Le poids en grammes',   type: 'nombre', ph: '3400' },
+  { cle: 'taille',       label: 'La taille en cm',       type: 'nombre', ph: '50' },
+  { cle: 'lettre',       label: 'Première lettre',       type: 'texte', ph: 'L' },
+  { cle: 'coupe',        label: 'La coupe',              type: 'choix', opts: [] }
 ];
 
 if (CLE) entrer(); else show('s-cle', true);
@@ -35,7 +34,9 @@ function entrer() {
     .then(function (d) {
       if (!d.ok) {
         show('s-cle', true);
-        $('cle-err').textContent = 'Clé refusée.';
+        $('cle-err').textContent = d.error === 'Action inconnue.'
+          ? 'Le serveur ne connaît pas la console : le dernier Code.gs n\'a pas été déployé.'
+          : (d.error || 'Clé refusée.');
         show('cle-err', true);
         return;
       }
@@ -50,7 +51,8 @@ function entrer() {
     })
     .catch(function () {
       show('s-cle', true);
-      $('cle-err').textContent = 'Connexion impossible.';
+      $('cle-err').textContent = 'Le serveur a répondu par une erreur. Vérifie que Code.gs est '
+        + 'bien déployé en nouvelle version, et que l\'onglet Config existe.';
       show('cle-err', true);
     });
 }
@@ -126,8 +128,6 @@ function dessinerMessages() {
 
 function dessinerChamps() {
   CHAMPS.forEach(function (c) {
-    if (c.cle === 'heure') c.opts = STV_CRENEAUX.map(function (x) { return [x.cle, x.libelle]; });
-    if (c.cle === 'ascendant') c.opts = STV_SIGNES.map(function (x) { return [x, x]; });
     if (c.cle === 'coupe') c.opts = STV_COUPE.map(function (x) { return [x.cle, x.libelle]; });
   });
 
@@ -141,12 +141,34 @@ function dessinerChamps() {
               + o[1] + '</option>';
           }).join('') + '</select>';
     } else {
-      var t = c.type === 'date' ? 'date' : c.type === 'nombre' ? 'number' : 'text';
+      var t = c.type === 'date' ? 'date' : c.type === 'heure' ? 'time'
+            : c.type === 'nombre' ? 'number' : 'text';
       champ = '<input type="' + t + '" id="r-' + c.cle + '" value="' + v + '"'
         + (c.ph ? ' placeholder="' + c.ph + '"' : '') + '>';
     }
     return '<div class="champ-admin"><label class="q">' + c.label + '</label>' + champ + '</div>';
-  }).join('');
+  }).join('')
+  + '<div class="deduit" id="deduit"></div>';
+
+  ['r-date', 'r-heure_exacte'].forEach(function (id) { $(id).oninput = majDeduit; });
+  majDeduit();
+}
+
+/* Le créneau et l'ascendant se calculent sous tes yeux, avec la même
+   formule que le jeu : rien à deviner, rien à saisir. */
+function majDeduit() {
+  var d = $('r-date').value, h = $('r-heure_exacte').value;
+  if (!d || !h) {
+    $('deduit').innerHTML = '<span class="mini-note">Renseigne le jour et l\'heure exacte : le '
+      + 'créneau et l\'ascendant se calculeront tout seuls.</span>';
+    return;
+  }
+  var cfg = ETAT.config;
+  var cr = stvCreneauDe(h);
+  var lib = STV_CRENEAUX.filter(function (x) { return x.cle === cr; })[0];
+  var asc = stvAscendantNaissance(cfg, d, h);
+  $('deduit').innerHTML = 'Créneau : <strong>' + (lib ? lib.libelle : '—') + '</strong>'
+    + '<br>Ascendant : <strong>' + asc + '</strong> — ' + (STV_CARACTERES[asc] || '');
 }
 
 $('btn-resultat').onclick = function () {

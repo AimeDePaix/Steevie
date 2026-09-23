@@ -172,9 +172,11 @@ function stvBornes(txt) {
  */
 function stvTranchesPoids(cfg) {
   var b = stvBornes(cfg.poids_bornes), t = [], i;
-  if (b.length < 2) b = [2700, 3000, 3300, 3600, 3900, 4200, 4500];
+  if (b.length < 2) b = [2600, 2800, 3000, 3200, 3400, 3700, 4000];
 
-  t.push({ cle: 'lt', libelle: 'moins de ' + stvKg(b[0]), court: stvKg(b[0]).replace(' kg', '') });
+  // La première tranche affiche sa borne haute INCLUSE : « 2,5 kg ou moins »
+  // plutôt que « moins de 2,6 kg ». Ainsi aucune valeur n'apparaît deux fois.
+  t.push({ cle: 'lt', libelle: stvKg(b[0] - 100) + ' ou moins', court: stvKg(b[0] - 100).replace(' kg', '') });
   for (i = 0; i < b.length - 1; i++) {
     var haut = b[i + 1] - 100;
     t.push({
@@ -193,7 +195,7 @@ function stvTranchesTaille(cfg) {
   var b = stvBornes(cfg.taille_bornes), t = [], i;
   if (b.length < 2) b = [48, 49, 50, 51, 52, 53, 54];
 
-  t.push({ cle: 'lt', libelle: 'moins de ' + b[0] + ' cm', valeur: b[0] - 1.5 });
+  t.push({ cle: 'lt', libelle: (b[0] - 1) + ' cm ou moins', valeur: b[0] - 1.5 });
   for (i = 0; i < b.length - 1; i++) {
     var haut = b[i + 1] - 1;
     t.push({
@@ -311,7 +313,7 @@ function stvLoiPoids(cfg, sexe) {
   var mu = cfg['poids_moyen_' + sexe] + stvBorne(cfg.ajust_poids, cfg.ajust_poids_max);
   var sd = cfg.poids_sd, p = {}, i;
   var b = stvBornes(cfg.poids_bornes);
-  if (b.length < 2) b = [2700, 3000, 3300, 3600, 3900, 4200, 4500];
+  if (b.length < 2) b = [2600, 2800, 3000, 3200, 3400, 3700, 4000];
 
   p.lt = stvCdf(b[0] - 50, mu, sd);
   for (i = 0; i < b.length - 1; i++) {
@@ -402,6 +404,25 @@ function stvMonAscendant(iso, heure, minute, lat, lonEst) {
   var jd = stvJourJulien(Number(p[0]), mois, Number(p[2]),
                          heure + minute / 60 - offset);
   return stvAscendant(jd, lat, lonEst);
+}
+
+/* Le créneau qui contient une heure exacte « 14:37 ». */
+function stvCreneauDe(hhmm) {
+  var h = Number(String(hhmm || '').split(':')[0]);
+  if (!isFinite(h) || String(hhmm || '').indexOf(':') < 0) return '';
+  for (var i = 0; i < STV_CRENEAUX.length; i++) {
+    if (h >= STV_CRENEAUX[i].debut && h < STV_CRENEAUX[i].fin) return STV_CRENEAUX[i].cle;
+  }
+  return '';
+}
+
+/* L'ascendant réel d'une naissance, à la minute près, à la maternité. */
+function stvAscendantNaissance(cfg, iso, hhmm) {
+  var d = String(iso || '').split('-'), p = String(hhmm || '').split(':');
+  if (d.length !== 3 || p.length < 2) return '';
+  var jd = stvJourJulien(Number(d[0]), Number(d[1]), Number(d[2]),
+                         Number(p[0]) + Number(p[1]) / 60 - cfg.utc_offset);
+  return stvAscendant(jd, cfg.lat, cfg.lon);
 }
 
 /* À une date et un créneau donnés, seuls trois ou quatre signes peuvent se

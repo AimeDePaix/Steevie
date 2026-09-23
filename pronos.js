@@ -114,14 +114,14 @@ var MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
 
 function jolieDate(iso) {
   if (!iso) return '';
-  var p = String(iso).split('-');
-  return Number(p[2]) + ' ' + MOIS[Number(p[1]) - 1] + ' ' + p[0];
+  var p = String(iso).split('-'), j = Number(p[2]);
+  return (j === 1 ? '1er' : j) + ' ' + MOIS[Number(p[1]) - 1] + ' ' + p[0];
 }
 
 var MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
                    'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
 function courteDate(iso) {
-  var p = String(iso).split('-');
-  return Number(p[2]) + ' ' + MOIS_COURTS[Number(p[1]) - 1];
+  var p = String(iso).split('-'), j = Number(p[2]);
+  return (j === 1 ? '1er' : j) + ' ' + MOIS_COURTS[Number(p[1]) - 1];
 }
