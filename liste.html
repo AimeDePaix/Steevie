@@ -45,7 +45,8 @@ h1 { margin: 0; font-family: var(--display); font-variation-settings: "SOFT" 60,
 
 .mode { background: var(--doux); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 0 4px 4px 0; display: grid; gap: 8px; font-size: 15px; }
 .mode p { margin: 0; }
-.legende { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.legende-def { display: grid; gap: 8px; }
+.legende-def p { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 
 .badge { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); padding: 5px 9px; border-radius: 20px; white-space: nowrap; }
 .badge.sur { background: color-mix(in srgb, var(--sur) 14%, transparent); color: var(--sur); }
@@ -104,7 +105,7 @@ footer { text-align: center; color: var(--soft); font: 400 13px/1.6 var(--mono);
   <header>
     <p class="eyebrow">La liste de naissance de</p>
     <h1>Steevie</h1>
-    <p class="chapo">Steevie arrive léger : ni vêtements, ni lit, ni la moindre opinion sur la déco. Voilà de quoi l'aider à s'installer.</p>
+    <p class="chapo">Steevie arrive léger : ni vêtements, ni la moindre opinion sur la déco. Voilà de quoi l'aider à s'installer. Le plus grand défi sera d'être plus rapide que les grands-mères.</p>
   </header>
 
   <section class="verrou" id="verrou">
@@ -118,9 +119,9 @@ footer { text-align: center; color: var(--soft); font: 400 13px/1.6 var(--mono);
   <div id="contenu" class="hidden">
   <div class="mode">
     <p><strong>Avant d'acheter, écris-nous.</strong> Dis-nous ce qui te tente, on le note dans la foulée. Ça évite les doublons, et c'est l'occasion de se parler.</p>
-    <div class="legende">
-      <span class="badge sur">● on sait ce qu'on veut</span>
-      <span class="badge blanc">● carte blanche</span>
+    <div class="legende-def">
+      <p><span class="badge blanc">● carte blanche</span> Tu choisis et tu achètes ce que tu veux, à ton goût.</p>
+      <p><span class="badge sur">● on sait ce qu'on veut</span> C'est nous qui achetons le modèle précis, et tu nous rembourses tout ou partie, comme tu le sens.</p>
     </div>
   </div>
 
@@ -143,22 +144,25 @@ footer { text-align: center; color: var(--soft); font: 400 13px/1.6 var(--mono);
 var CODE = 'Merciàtoi';
 
 var ARTICLES = [
-  ['Le dodo', 'Transat pour chaise haute évolutive', 'Le Tripp Trapp® Newborn Set, pour garder Steevie avec nous même à table', 1, 115, 1, 'sur'],
-  ['Le dodo', 'Berceau', 'Le cododo Maxi Cosi Iora Air ou Plus', 1, 200, 1, 'sur'],
-  ['Le dodo', 'Alèses matelas', 'Adaptées au matelas du berceau', 2, 20, 0, 'sur'],
-  ['Le dodo', 'Draps-housses matelas', 'Adaptés au matelas du berceau', 2, 20, 0, 'sur'],
+  /* [catégorie, nom, commentaire, quantité, prix unitaire, offert, mode, prix masqué]
+     Le prix sert au calcul de l'avancement ; il ne s'affiche que pour les
+     articles « on sait ce qu'on veut » encore à offrir, et jamais si le
+     dernier champ vaut true. */
+  ['Le dodo', 'Transat pour chaise haute', 'Pour garder Steevie avec nous, même à table', 1, 115, 1, 'sur'],
+  ['Le dodo', 'Berceau', 'En cododo, collé à notre lit', 1, 200, 1, 'sur'],
+  ['Le dodo', 'Alèses de matelas', 'Adaptées au matelas du berceau', 2, 20, 0, 'sur', true],
+  ['Le dodo', 'Draps-housses', 'Adaptés au matelas du berceau', 2, 20, 0, 'sur', true],
   ['Le dodo', 'Gigoteuse 1-6 mois, tog 1', '', 2, 35, 0, 'blanc'],
   ['Le dodo', 'Gigoteuse 1-6 mois, tog 2.5', '', 2, 35, 1, 'blanc'],
-  ['Le jeu', "Tapis d'éveil", 'On nous a recommandé le Mezamé, mais on est ouverts', 1, 100, 0, 'blanc'],
+  ['Le jeu', "Tapis d'éveil", '', 1, 140, 0, 'sur'],
   ['Le jeu', "Arche d'éveil", '', 1, null, 0, 'blanc'],
-  ['Le miam', 'Chaise haute évolutive', "La Tripp Trapp®, qu'on achètera d'occasion avec le kit Baby Set", 1, 100, 0, 'sur'],
-  ['Le miam', 'Chauffe-biberon', 'Multi Milk Argile de Béaba', 1, 60, 0, 'sur'],
+  ['Le miam', 'Chaise haute évolutive', '', 1, 100, 1, 'sur'],
+  ['Le miam', 'Chauffe-biberon', '', 1, 60, 0, 'sur'],
   ['Le miam', 'Égouttoir à biberons', '', 1, 20, 0, 'sur'],
-  ['Le miam', 'Biberons', 'Lot de 2 Natural 3.0 Air Free 125 ml, Philips Avent', 2, 9, 0, 'sur'],
-  ['Le miam', 'Sachets de conservation du lait maternel', '', 1, 13.55, 0, 'sur'],
-  ['Le propre', 'Commode à langer', "Une Petite Amélie d'occasion, plan à langer inclus", 1, 100, 1, 'sur'],
-  ['Le propre', 'Matelas à langer', 'Softy, de Nattou', 1, 65.95, 0, 'sur'],
-  ['Le propre', 'Baignoire Twistshake', "Qu'on prendra d'occasion", 1, 20, 0, 'sur'],
+  ['Le miam', 'Biberons', 'Lot de 2, 125 ml', 2, 9, 0, 'sur'],
+  ['Le propre', 'Commode à langer', "D'occasion, plan à langer inclus", 1, 100, 1, 'sur'],
+  ['Le propre', 'Matelas à langer', '', 1, 65.95, 0, 'sur'],
+  ['Le propre', 'Baignoire', '', 1, 20, 0, 'sur'],
   ['Le propre', 'Thermomètre de bain', '', 1, 10, 0, 'blanc'],
   ['Le propre', 'Capes de bain', '', 2, 20, 1, 'blanc'],
   ['Le propre', 'Sac à langer', '', 1, 60, 0, 'blanc'],
@@ -181,13 +185,12 @@ var ARTICLES = [
   ['Le style', 'Paires de chaussettes en coton, 3 mois', '', 4, 3.5, 0, 'blanc'],
   ['Le style', 'Bonnet, 3 mois', '', 1, 5, 0, 'blanc'],
   ['Le style', 'Gilets en coton, 3 mois', '', 2, 13, 0, 'blanc'],
-  ['Le voyage', 'Porte-bébé', 'Omni Deluxe Mesh, Ergobaby', 1, 220, 1, 'sur'],
-  ['Le voyage', 'Écharpe de portage', 'Pas encore totalement décidé, sûrement une Love Radius', 1, 60, 0, 'sur'],
-  ["Le voyage", "Nid d'ange pour poussette", 'Sachant qu\'on a la Nuna Swiv', 1, 50, 0, 'blanc'],
-  ['Le voyage', 'Poussette avec nacelle', 'La Nuna Swiv avec nacelle LITL', 1, 811.15, 1, 'sur'],
-  ['Le voyage', 'Coque auto avec socle', 'Cloud T-Size avec sa base T', 1, 423, 1, 'sur']
+  ['Le voyage', 'Porte-bébé', '', 1, 220, 1, 'sur'],
+  ['Le voyage', 'Poussette avec nacelle', '', 1, 811.15, 1, 'sur'],
+  ['Le voyage', 'Coque auto', 'Avec sa base', 1, 423, 1, 'sur'],
+  ['Le souvenir', 'Shooting photo de grossesse', '', 1, null, 1, 'sur']
 ].map(function (a) {
-  return { cat: a[0], nom: a[1], note: a[2], qte: a[3], prix: a[4], offert: a[5], mode: a[6] };
+  return { cat: a[0], nom: a[1], note: a[2], qte: a[3], prix: a[4], offert: a[5], mode: a[6], cache: !!a[7] };
 });
 
 var SOUS = {
@@ -196,7 +199,8 @@ var SOUS = {
   'Le miam': 'Le biberon, le lait, et plus tard la chaise.',
   'Le propre': 'Le change, le bain, et la logistique qui va avec.',
   'Le style': 'Taille naissance, 1 mois, 3 mois : il grandit vite.',
-  'Le voyage': 'Pour sortir, et pour qu\'on sorte avec lui.'
+  'Le voyage': 'Pour sortir, et pour qu\'on sorte avec lui.',
+  'Le souvenir': 'Pour se rappeler à quoi ressemblait l\'attente.'
 };
 
 var filtre = 'Tout';
@@ -211,6 +215,9 @@ function pieces(a) {
   return h + '<span>' + a.offert + '/' + a.qte + '</span></span>';
 }
 
+/* Le prix n'apparaît que pour ce que nous achetons nous-mêmes. */
+function montrePrix(a) { return a.mode === 'sur' && a.prix != null && !a.cache; }
+
 function ligne(a) {
   var complet = a.offert >= a.qte;
   var reste = a.qte - a.offert;
@@ -222,8 +229,8 @@ function ligne(a) {
                  : '<span class="badge ' + a.mode + '">● ' + (a.mode === 'sur' ? 'on sait ce qu\'on veut' : 'carte blanche') + '</span>')
     +   pieces(a)
     + '</div></div>'
-    + '<div class="prix">' + (complet ? '' : a.prix == null ? '<small>prix libre</small>' : euros(a.prix)
-        + (a.qte > 1 ? '<small>l\'unité · ' + reste + ' à offrir</small>' : ''))
+    + '<div class="prix">' + (complet ? '' : (montrePrix(a) ? euros(a.prix) : '')
+        + (a.qte > 1 ? '<small>' + (montrePrix(a) ? 'l\'unité · ' : '') + reste + ' à offrir</small>' : ''))
     + '</div></div>';
 }
 
@@ -247,7 +254,8 @@ function rendre() {
     if (a.offert < a.qte) restants++;
   });
   $('barre').style.width = (fait / total * 100).toFixed(1) + '%';
-  $('avance').textContent = Math.round(fait / total * 100) + ' % de la liste déjà offerte';
+  // Arrondi par paliers de 5 % : l'avancement reste une indication, pas un relevé.
+  $('avance').textContent = 'Environ ' + Math.round(fait / total * 20) * 5 + ' % de la liste déjà offerte';
   $('reste').textContent = restants + ' articles encore à offrir';
 
   document.querySelectorAll('.filtre').forEach(function (b) {
