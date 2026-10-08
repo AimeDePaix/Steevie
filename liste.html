@@ -144,7 +144,8 @@ footer { text-align: center; color: var(--soft); font: 400 13px/1.6 var(--mono);
 var CODE = 'Merciàtoi';
 
 var ARTICLES = [
-  /* [catégorie, nom, commentaire, quantité, prix unitaire, offert, mode, prix masqué]
+  /* [catégorie, nom, commentaire, quantité, prix unitaire, offert, mode, prix masqué, permanent]
+     « permanent » : un article toujours ouvert, jamais compté ni barré.
      Le prix sert au calcul de l'avancement ; il ne s'affiche que pour les
      articles « on sait ce qu'on veut » encore à offrir, et jamais si le
      dernier champ vaut true. */
@@ -188,9 +189,11 @@ var ARTICLES = [
   ['Le voyage', 'Porte-bébé', '', 1, 220, 1, 'sur'],
   ['Le voyage', 'Poussette avec nacelle', '', 1, 811.15, 1, 'sur'],
   ['Le voyage', 'Coque auto', 'Avec sa base', 1, 423, 1, 'sur'],
-  ['Le souvenir', 'Shooting photo de grossesse', '', 1, null, 1, 'sur']
+  ['Divers', 'Shooting photo de grossesse', '', 1, null, 1, 'sur'],
+  ['Divers', 'Contribution libre', 'Le montant de ton choix, pour tout ce qu\'on aura oublié de prévoir', 1, null, 0, 'blanc', false, true],
+  ['Divers', 'Ta suggestion', 'Un objet qui t\'a sauvé la mise avec tes enfants ? Dis-le-nous, on est preneurs', 1, null, 0, 'blanc', false, true]
 ].map(function (a) {
-  return { cat: a[0], nom: a[1], note: a[2], qte: a[3], prix: a[4], offert: a[5], mode: a[6], cache: !!a[7] };
+  return { cat: a[0], nom: a[1], note: a[2], qte: a[3], prix: a[4], offert: a[5], mode: a[6], cache: !!a[7], permanent: !!a[8] };
 });
 
 var SOUS = {
@@ -200,7 +203,7 @@ var SOUS = {
   'Le propre': 'Le change, le bain, et la logistique qui va avec.',
   'Le style': 'Taille naissance, 1 mois, 3 mois : il grandit vite.',
   'Le voyage': 'Pour sortir, et pour qu\'on sorte avec lui.',
-  'Le souvenir': 'Pour se rappeler à quoi ressemblait l\'attente.'
+  'Divers': 'Ce qui ne rentre dans aucune case.'
 };
 
 var filtre = 'Tout';
@@ -219,7 +222,7 @@ function pieces(a) {
 function montrePrix(a) { return a.mode === 'sur' && a.prix != null && !a.cache; }
 
 function ligne(a) {
-  var complet = a.offert >= a.qte;
+  var complet = !a.permanent && a.offert >= a.qte;
   var reste = a.qte - a.offert;
   return '<div class="article' + (complet ? ' complet' : '') + '">'
     + '<div><div class="titre">' + a.nom + '</div>'
@@ -230,13 +233,13 @@ function ligne(a) {
     +   pieces(a)
     + '</div></div>'
     + '<div class="prix">' + (complet ? '' : (montrePrix(a) ? euros(a.prix) : '')
-        + (a.qte > 1 ? '<small>' + (montrePrix(a) ? 'l\'unité · ' : '') + reste + ' à offrir</small>' : ''))
+        + (a.qte > 1 && !a.permanent ? '<small>' + (montrePrix(a) ? 'l\'unité · ' : '') + reste + ' à offrir</small>' : ''))
     + '</div></div>';
 }
 
 function rendre() {
   $('filtres').innerHTML = ['Tout'].concat(cats).map(function (c) {
-    var n = ARTICLES.filter(function (a) { return (c === 'Tout' || a.cat === c) && a.offert < a.qte; }).length;
+    var n = ARTICLES.filter(function (a) { return (c === 'Tout' || a.cat === c) && a.offert < a.qte && !a.permanent; }).length;
     return '<button class="filtre" id="f-' + c.replace(/\W/g, '') + '" aria-pressed="' + (c === filtre) + '" data-c="' + c + '">'
       + c + '<span class="n">' + n + '</span></button>';
   }).join('');
@@ -251,7 +254,7 @@ function rendre() {
   var total = 0, fait = 0, restants = 0;
   ARTICLES.forEach(function (a) {
     if (a.prix != null) { total += a.prix * a.qte; fait += a.prix * Math.min(a.offert, a.qte); }
-    if (a.offert < a.qte) restants++;
+    if (a.offert < a.qte && !a.permanent) restants++;
   });
   $('barre').style.width = (fait / total * 100).toFixed(1) + '%';
   // Arrondi par paliers de 5 % : l'avancement reste une indication, pas un relevé.
