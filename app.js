@@ -327,7 +327,7 @@ function optionsDe(cle) {
     out.push({ v: 'apres', l: courteDate(stvJourVersDate(CFG, CFG.date_max + 1)) + ' ou après' });
     return out;
   }
-  if (cle === 'poids')  return stvTranchesPoids(CFG).map(function (t) { return { v: t.cle, l: t.libelle }; });
+  if (cle === 'poids')  return stvTranchesPoids(CFG).map(function (t) { return { v: t.cle, l: t.libelle, nom: t.nom }; });
   if (cle === 'taille') return stvTranchesTaille(CFG).map(function (t) { return { v: t.cle, l: t.libelle, valeur: t.valeur }; });
   if (cle === 'lettre') {
     for (i = 65; i <= 90; i++) out.push({ v: String.fromCharCode(i), l: String.fromCharCode(i) });
@@ -412,39 +412,48 @@ function pastilles(zone, q, loi, cotes, choisi) {
   zone.appendChild(box);
 }
 
-/* Jauge du poids : la pastille se pose au MILIEU de sa tranche, les
-   graduations marquent les bornes entre tranches. */
+/* Jauge du poids : trois crans, maman et papa marqués aux deux bords de la
+   case du milieu, qui va de maman (2,9 kg) à papa (3,2 kg) inclus. */
 function jaugePoids(zone, cotes, choisi) {
   var opts = optionsDe('poids');
   var i = indexDe(opts, choisi);
   var pose = (i >= 0);
   if (!pose) i = Math.floor(opts.length / 2);
+  var o = opts[i];
 
   zone.innerHTML =
       '<div class="curseur poids' + (pose ? '' : ' vierge') + '">'
     +   '<div class="piste"><div class="pastille-c" style="left:' + centre(i, opts.length) + '%"></div></div>'
     +   '<input type="range" min="0" max="' + (opts.length - 1) + '" step="1" value="' + i + '" aria-label="Poids">'
     + '</div>'
-    + bornesPoids(opts.length)
+    + reperesParents(opts.length)
     + '<div class="jauge-bornes"><span>🫛 petit poids</span><span>pilier du Stade Toulousain 🏉</span></div>'
     + '<div class="choix-ligne avec-icone">'
     +   '<span class="icone-poids" style="--p:' + echelle(i, opts.length) + '">' + poidsSVG() + '</span>'
-    +   '<span class="choix-val">' + (pose ? opts[i].l : 'Fais glisser le curseur') + '</span>'
-    +   (pose ? '<span class="choix-cote">cote ' + stvFmtCote(cotes[opts[i].v]) + '</span>' : '')
+    +   '<span class="choix-val">' + (pose ? (o.nom || o.l) : 'Fais glisser le curseur') + '</span>'
+    +   (pose ? '<span class="choix-cote">' + (o.nom ? o.l + ' · ' : '') + 'cote ' + stvFmtCote(cotes[o.v]) + '</span>' : '')
     + '</div>'
-    + '<p class="qhint regle-borne">Le poids annoncé est arrondi à la centaine de grammes la '
-    +   'plus proche, puis on regarde la tranche. 3 250 g devient 3,3 kg et tombe donc dans '
-    +   '« 3,2 kg – 3,3 kg ».</p>';
+    + '<p class="qhint regle-borne">Le poids de la maternité est arrondi à la centaine de grammes. '
+    +   '2 840 g compte pour 2,8 kg, donc « plus petit que maman » ; 3 250 g compte pour 3,3 kg, '
+    +   'donc « plus gros que papa ».</p>';
 
   brancherCurseur(zone, opts, 'poids', false);
 }
 
-function bornesPoids(n) {
+/* Les repères des parents, posés sur les bords de la case du milieu. Si le
+   découpage change dans Config, on retombe sur les bornes chiffrées. */
+function reperesParents(n) {
+  var b = stvBornes(CFG.poids_bornes);
   var h = '<div class="gradus">';
-  stvBornes(CFG.poids_bornes).forEach(function (g, j) {
-    h += '<span class="gradu" style="left:' + (((j + 1) / n) * 100).toFixed(2) + '%"><i></i>'
-       + '<em>' + (g / 1000).toFixed(1).replace('.', ',') + '</em></span>';
-  });
+  if (n === 3) {
+    h += '<span class="gradu repere repere-m" style="left:33.33%"><i></i><em>maman ' + enKg(CFG.maman_poids) + '</em></span>'
+       + '<span class="gradu repere repere-p" style="left:66.67%"><i></i><em>papa ' + enKg(CFG.papa_poids) + '</em></span>';
+  } else {
+    b.forEach(function (g, j) {
+      h += '<span class="gradu" style="left:' + (((j + 1) / n) * 100).toFixed(2) + '%"><i></i>'
+         + '<em>' + (g / 1000).toFixed(1).replace('.', ',') + '</em></span>';
+    });
+  }
   return h + '</div>';
 }
 
@@ -493,7 +502,7 @@ function brancherCurseur(zone, opts, cle, vertical) {
   input.oninput = function () {
     var j = Number(input.value);
     pastille.style[vertical ? 'bottom' : 'left'] = centre(j, opts.length) + '%';
-    val.textContent = opts[j].l;
+    val.textContent = opts[j].nom || opts[j].l;
     cadre.classList.remove('vierge');
   };
   input.onchange = function () { choisir(cle, opts[Number(input.value)].v); };

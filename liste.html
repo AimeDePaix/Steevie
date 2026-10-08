@@ -5,201 +5,250 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Steevie — liste de naissance</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <!-- ===========================================================================
-     FICHIER AUTONOME.
-     Style et script sont à l'intérieur : il ne dépend d'aucun autre fichier du
-     site. Tu peux le modifier, le casser, le refaire entièrement sans jamais
-     toucher aux pronostics. Sur GitHub : ouvre le fichier, clique le crayon,
-     modifie, commit. Rien d'autre à redéposer.
+     FICHIER AUTONOME : style et script sont ici, aucun autre fichier du site
+     n'est concerné. Sur GitHub : ouvrir le fichier, crayon, modifier, commit.
 
-     POUR AJOUTER UN CADEAU : va dans la liste CADEAUX en bas de ce fichier.
-     n = nom, p = prix, c = catégorie, e = émoji, r = déjà réservé (true/false).
-     POUR CHANGER LE CODE D'ACCÈS : la constante CODE, juste au-dessus.
+     METTRE À JOUR UN ARTICLE : dans ARTICLES en bas, l'avant-dernier nombre
+     de chaque ligne est la quantité déjà offerte. Quand il égale la quantité
+     demandée, l'article passe en « déjà offert », barré et sans prix.
+     Format : [catégorie, nom, commentaire, quantité, prix unitaire, offert, mode]
+     mode = 'sur' (on sait ce qu'on veut) ou 'blanc' (carte blanche).
+     LE CODE D'ACCÈS : la constante CODE, juste au-dessus de ARTICLES.
      =========================================================================== -->
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..700,0..100,0..1&family=Karla:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* Layout : une colonne de liste façon carnet de layette. Chaque article est une ligne avec son compteur de pièces (des pastilles pleines ou vides), la catégorie sert de chapitre, les articles complets descendent en bas et se grisent. Palette reprise du site Steevie. */
 :root {
-  --paper: #E9EEE7; --card: #FCFDFB; --ink: #17251F; --ink-soft: #5F6E66;
-  --rule: #CBD5C7; --accent: #D9A31E;
-  --display: "Fraunces", Georgia, serif;
-  --body: "Karla", system-ui, sans-serif;
-  --mono: "DM Mono", ui-monospace, monospace;
+  --paper: #E9EEE7; --card: #FCFDFB; --ink: #17251F; --soft: #5F6E66; --rule: #CBD5C7;
+  --accent: #D9A31E; --sur: #2F6B4E; --blanc: #B8862C; --doux: #F3EEDC;
+  --display: "Fraunces", Georgia, serif; --body: "Karla", system-ui, sans-serif; --mono: "DM Mono", ui-monospace, monospace;
+  color-scheme: light;
 }
-* { box-sizing: border-box; }
-body { margin: 0; padding: 0 16px 80px; background: var(--paper); color: var(--ink);
-  font: 400 17px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
-.wrap { max-width: 640px; margin: 0 auto; }
-.hidden { display: none !important; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #131B17; --card: #1B2520; --ink: #E6ECE7; --soft: #9AA8A0; --rule: #33413A;
+  --accent: #E2B444; --sur: #7FC39E; --blanc: #E2B444; --doux: #2A2A1E; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #131B17; --card: #1B2520; --ink: #E6ECE7; --soft: #9AA8A0; --rule: #33413A;
+  --accent: #E2B444; --sur: #7FC39E; --blanc: #E2B444; --doux: #2A2A1E; color-scheme: dark; }
 
-header { padding: 48px 0 28px; text-align: center; }
-.eyebrow { margin: 0; font: 500 12px/1 var(--mono); letter-spacing: .18em;
-  text-transform: uppercase; color: var(--ink-soft); }
-h1 { margin: 12px 0 0; font-family: var(--display);
-  font-variation-settings: "SOFT" 60, "WONK" 1, "opsz" 100; font-weight: 600;
-  font-size: clamp(52px, 15vw, 84px); line-height: .95; letter-spacing: -.02em; }
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 720px; margin: 0 auto; padding-inline: 18px; padding-block: 36px 64px; display: grid; gap: 22px; }
 
-section { background: var(--card); border: 1px solid var(--rule); border-radius: 3px;
-  padding: 26px 20px; margin-bottom: 18px; }
-h2 { margin: 0 0 4px; font-family: var(--display);
-  font-variation-settings: "SOFT" 40, "opsz" 20; font-weight: 600; font-size: 23px; }
-.sub { margin: 0 0 22px; color: var(--ink-soft); font-size: 15px; }
-.accroche { margin: 0 0 16px; font-family: var(--display);
-  font-variation-settings: "SOFT" 50, "WONK" 1, "opsz" 40; font-weight: 500;
-  font-size: 25px; line-height: 1.3; }
-.erreur { color: #A33; font-size: 15px; margin-top: 12px; }
+header { display: grid; gap: 10px; }
+.eyebrow { margin: 0; font: 500 12px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--soft); }
+h1 { margin: 0; font-family: var(--display); font-variation-settings: "SOFT" 60, "WONK" 1; font-weight: 600; font-size: clamp(40px, 10vw, 64px); line-height: .98; }
+.chapo { margin: 0; max-width: 58ch; }
 
-input[type=password] { width: 100%; padding: 13px 12px; border: 1px solid var(--rule);
-  border-radius: 3px; background: var(--card); font: 400 17px/1 var(--body); color: var(--ink); }
-.cta { width: 100%; padding: 16px; border: none; border-radius: 3px; background: var(--ink);
-  color: var(--card); font: 700 17px/1 var(--body); cursor: pointer; text-align: center;
-  display: block; text-decoration: none; }
+.mode { background: var(--doux); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 0 4px 4px 0; display: grid; gap: 8px; font-size: 15px; }
+.mode p { margin: 0; }
+.legende { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); padding: 5px 9px; border-radius: 20px; white-space: nowrap; }
+.badge.sur { background: color-mix(in srgb, var(--sur) 14%, transparent); color: var(--sur); }
+.badge.blanc { background: color-mix(in srgb, var(--blanc) 16%, transparent); color: var(--blanc); }
+
+.jauge { display: grid; gap: 8px; }
+.jauge-txt { display: flex; justify-content: space-between; gap: 12px; font: 400 13px/1.3 var(--mono); color: var(--soft); font-variant-numeric: tabular-nums; }
+.piste { height: 8px; background: var(--rule); border-radius: 8px; overflow: hidden; }
+.piste i { display: block; height: 100%; background: var(--accent); }
+
+.filtres { display: flex; flex-wrap: wrap; gap: 7px; }
+.filtre { padding: 8px 13px; border: 1px solid var(--rule); border-radius: 20px; background: var(--card); color: var(--ink); font: 500 14px/1 var(--body); cursor: pointer; }
+.filtre:hover { border-color: var(--soft); }
+.filtre[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.filtre:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.filtre .n { opacity: .6; margin-left: 4px; font-family: var(--mono); font-size: 12px; }
+
+.chapitre { background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: 20px 18px 8px; }
+.chapitre h2 { margin: 0 0 4px; font-family: var(--display); font-variation-settings: "SOFT" 50, "WONK" 1; font-weight: 600; font-size: 24px; }
+.chapitre .sous { margin: 0 0 6px; color: var(--soft); font-size: 14px; }
+
+.article { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; padding: 14px 0; border-top: 1px solid var(--rule); }
+.article:first-of-type { border-top: none; }
+.article > div { min-width: 0; }
+.titre { font-weight: 700; font-size: 16px; line-height: 1.3; }
+.note { margin-top: 3px; font-size: 14.5px; color: var(--soft); }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.prix { font: 500 14px/1 var(--mono); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.prix small { display: block; margin-top: 4px; font-weight: 400; font-size: 12px; color: var(--soft); }
+.pieces { display: inline-flex; gap: 4px; align-items: center; }
+.pieces i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--sur); }
+.pieces i.pris { background: var(--sur); }
+.pieces span { font: 400 12px/1 var(--mono); color: var(--soft); margin-left: 4px; }
+
+.article.complet .titre, .article.complet .prix { color: var(--soft); }
+.article.complet .titre { text-decoration: line-through; text-decoration-color: var(--rule); }
+.article.complet .note { opacity: .7; }
+.offert { font: 500 12px/1 var(--mono); color: var(--soft); }
+
+footer { text-align: center; color: var(--soft); font: 400 13px/1.6 var(--mono); }
+@media (max-width: 460px) { .article { grid-template-columns: 1fr; } .prix { text-align: left; } }
+.verrou { display: grid; gap: 12px; background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: 22px 18px; }
+.verrou h2 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 23px; }
+.verrou p { margin: 0; color: var(--soft); font-size: 15px; }
+.verrou input { width: 100%; padding: 13px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--card); color: var(--ink); font: 400 17px/1 var(--body); }
+.cta { width: 100%; padding: 15px; border: none; border-radius: 4px; background: var(--ink); color: var(--card); font: 700 16px/1 var(--body); cursor: pointer; text-align: center; text-decoration: none; display: block; }
 .cta.ghost { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
-
-.retour-nav { margin: 0 -16px 18px; background: var(--ink); }
-.retour-nav a { display: inline-block; padding: 13px 16px; font: 500 13px/1 var(--body);
-  color: rgba(252,253,251,.7); text-decoration: none; }
-.retour-nav a:hover { color: var(--card); }
-
-.filtres { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
-.filtre { padding: 8px 14px; border: 1px solid var(--rule); border-radius: 20px;
-  background: transparent; font: 400 14px/1 var(--body); color: var(--ink); cursor: pointer; }
-.filtre.actif { background: var(--ink); border-color: var(--ink); color: var(--card); }
-
-.cadeau { display: flex; align-items: center; gap: 14px; padding: 12px 0;
-  border-bottom: 1px solid var(--rule); }
-.cadeau:last-child { border-bottom: none; }
-.vignette { flex: 0 0 52px; height: 52px; display: flex; align-items: center;
-  justify-content: center; background: var(--paper); border-radius: 3px; font-size: 25px; }
-.corps { flex: 1; min-width: 0; }
-.nom { font-weight: 500; font-size: 15.5px; }
-.meta { font: 400 13px/1.5 var(--mono); color: var(--ink-soft); }
-.btn { flex: 0 0 auto; padding: 10px 16px; border: 1px solid var(--ink); border-radius: 3px;
-  background: transparent; font: 500 14px/1 var(--body); color: var(--ink); cursor: pointer; }
-.btn:hover { background: var(--ink); color: var(--card); }
-.btn:disabled { opacity: .45; cursor: default; background: transparent; color: var(--ink); }
-.etat { flex: 0 0 auto; padding: 6px 12px; border-radius: 20px; background: var(--paper);
-  font: 500 12px/1.5 var(--body); color: var(--ink-soft); }
-.pris .vignette { filter: grayscale(1); opacity: .5; }
-.pris .nom { color: var(--ink-soft); text-decoration: line-through; }
-
-.avancement { margin-top: 26px; }
-.piste { height: 8px; background: var(--paper); border-radius: 20px; overflow: hidden; }
-.remplie { height: 100%; background: linear-gradient(90deg, var(--accent), #B8862C);
-  transition: width .4s ease; }
-.avancement p { margin: 8px 0 0; font: 400 13px/1 var(--mono); color: var(--ink-soft); }
-
-.apercu { margin-top: 22px; padding: 12px 14px; background: #FBF2D8;
-  border-left: 3px solid var(--accent); border-radius: 0 3px 3px 0; font-size: 14px; }
-footer { text-align: center; padding: 24px 0; font: 400 13px/1.6 var(--mono); color: var(--ink-soft); }
+.erreur { color: #B3412E; font-size: 14px; }
+#contenu { display: grid; gap: 22px; }
+.hidden, #contenu.hidden { display: none !important; }
 </style>
 </head>
-
 <body>
-<div class="wrap">
 
+<div class="wrap">
   <header>
     <p class="eyebrow">La liste de naissance de</p>
     <h1>Steevie</h1>
+    <p class="chapo">Steevie arrive léger : ni vêtements, ni lit, ni la moindre opinion sur la déco. Voilà de quoi l'aider à s'installer.</p>
   </header>
 
-  <div class="retour-nav" id="retour-nav"></div>
-
-  <!-- porte d'entrée -->
-  <section id="verrou">
-    <h2>Pas encore ouverte</h2>
-    <p class="sub">Le code s'obtient auprès des parents. Un petit message et
-      il est à toi.</p>
+  <section class="verrou" id="verrou">
+    <h2>Un code, et c'est ouvert</h2>
+    <p>Le code s'obtient auprès des parents. Un petit message et il est à toi.</p>
     <input type="password" id="code" placeholder="Code d'accès" autocomplete="off">
-    <button class="cta" id="btn-code" style="margin-top:12px">Entrer</button>
-    <p class="erreur hidden" id="code-err"></p>
+    <button class="cta" id="btn-code">Entrer</button>
+    <p class="erreur hidden" id="code-err">Ce n'est pas le bon code.</p>
   </section>
 
-  <!-- contenu -->
-  <section id="intro" class="hidden">
-    <p class="accroche">Steevie arrive léger.</p>
-    <p>Il n'a ni vêtements, ni lit, ni la moindre opinion sur la décoration de
-      sa chambre. Si vous voulez l'aider à s'installer, voilà de quoi piocher.</p>
-    <div class="apercu"><strong>Avant d'acheter, écrivez-nous.</strong> Dites-nous
-      ce qui vous tente, on raye l'article de la liste dans la foulée. Ça évite
-      les doublons, et ça nous fait une occasion de vous parler. Les articles
-      barrés sont déjà pris.</div>
-  </section>
-
-  <section id="articles" class="hidden">
-    <div class="filtres" id="filtres"></div>
-    <div id="cadeaux"></div>
-    <div class="avancement">
-      <div class="piste"><div class="remplie" id="jauge"></div></div>
-      <p id="jauge-txt"></p>
+  <div id="contenu" class="hidden">
+  <div class="mode">
+    <p><strong>Avant d'acheter, écris-nous.</strong> Dis-nous ce qui te tente, on le note dans la foulée. Ça évite les doublons, et c'est l'occasion de se parler.</p>
+    <div class="legende">
+      <span class="badge sur">● on sait ce qu'on veut</span>
+      <span class="badge blanc">● carte blanche</span>
     </div>
-  </section>
+  </div>
+
+  <div class="jauge">
+    <div class="jauge-txt"><span id="avance"></span><span id="reste"></span></div>
+    <div class="piste"><i id="barre"></i></div>
+  </div>
+
+  <div class="filtres" id="filtres" role="group" aria-label="Catégories"></div>
+  <div id="liste" style="display:grid;gap:16px"></div>
+  <a class="cta ghost" id="retour" href="index.html">Retour aux pronostics</a>
+  </div>
 
   <footer>Une page privée pour Steevie</footer>
 </div>
 
 <script>
-/* --- réglages ----------------------------------------------------------- */
-
+/* Les données, telles que dans le tableur. Pour mettre à jour : changer « offert »
+   quand quelqu'un réserve. Le nom de qui offre n'apparaît jamais sur la page. */
 var CODE = 'Merciàtoi';
 
-var CADEAUX = [
-/* Pour rayer un article quand quelqu'un vous l'a réservé : passez son « r »
-   de false à true. Pour en ajouter un : recopiez une ligne. */
-  { n: 'Gigoteuse 0-6 mois',            p: 39,  c: 'Dormir',      e: '🌙', r: false },
-  { n: 'Veilleuse à intensité douce',   p: 29,  c: 'Dormir',      e: '💡', r: true  },
-  { n: 'Draps housse en lin, lot de 2', p: 45,  c: 'Dormir',      e: '🛏️', r: false },
-  { n: 'Turbulette hiver',              p: 49,  c: 'Dormir',      e: '❄️', r: false },
-  { n: 'Bodys manches longues, lot de 5', p: 32, c: "S'habiller", e: '👕', r: false },
-  { n: 'Chaussons en cuir souple',      p: 24,  c: "S'habiller",  e: '👟', r: true  },
-  { n: 'Bavoirs en coton, lot de 3',    p: 18,  c: "S'habiller",  e: '🧣', r: false },
-  { n: 'Porte-bébé physiologique',      p: 129, c: 'Sortir',      e: '🎒', r: false },
-  { n: 'Sac à langer',                  p: 79,  c: 'Sortir',      e: '👜', r: false },
-  { n: 'Matelas à langer nomade',       p: 35,  c: 'Sortir',      e: '🧳', r: false },
-  { n: 'Mobile musical',                p: 42,  c: 'Jouer',       e: '🎵', r: false },
-  { n: "Tapis d'éveil",                 p: 65,  c: 'Jouer',       e: '🧸', r: true  },
-  { n: 'Livres en tissu, lot de 3',     p: 22,  c: 'Jouer',       e: '📚', r: false },
-  { n: 'Hochet en bois',                p: 14,  c: 'Jouer',       e: '🪀', r: false }
-];
+var ARTICLES = [
+  ['Le dodo', 'Transat pour chaise haute évolutive', 'Le Tripp Trapp® Newborn Set, pour garder Steevie avec nous même à table', 1, 115, 1, 'sur'],
+  ['Le dodo', 'Berceau', 'Le cododo Maxi Cosi Iora Air ou Plus', 1, 200, 1, 'sur'],
+  ['Le dodo', 'Alèses matelas', 'Adaptées au matelas du berceau', 2, 20, 0, 'sur'],
+  ['Le dodo', 'Draps-housses matelas', 'Adaptés au matelas du berceau', 2, 20, 0, 'sur'],
+  ['Le dodo', 'Gigoteuse 1-6 mois, tog 1', '', 2, 35, 0, 'blanc'],
+  ['Le dodo', 'Gigoteuse 1-6 mois, tog 2.5', '', 2, 35, 1, 'blanc'],
+  ['Le jeu', "Tapis d'éveil", 'On nous a recommandé le Mezamé, mais on est ouverts', 1, 100, 0, 'blanc'],
+  ['Le jeu', "Arche d'éveil", '', 1, null, 0, 'blanc'],
+  ['Le miam', 'Chaise haute évolutive', "La Tripp Trapp®, qu'on achètera d'occasion avec le kit Baby Set", 1, 100, 0, 'sur'],
+  ['Le miam', 'Chauffe-biberon', 'Multi Milk Argile de Béaba', 1, 60, 0, 'sur'],
+  ['Le miam', 'Égouttoir à biberons', '', 1, 20, 0, 'sur'],
+  ['Le miam', 'Biberons', 'Lot de 2 Natural 3.0 Air Free 125 ml, Philips Avent', 2, 9, 0, 'sur'],
+  ['Le miam', 'Sachets de conservation du lait maternel', '', 1, 13.55, 0, 'sur'],
+  ['Le propre', 'Commode à langer', "Une Petite Amélie d'occasion, plan à langer inclus", 1, 100, 1, 'sur'],
+  ['Le propre', 'Matelas à langer', 'Softy, de Nattou', 1, 65.95, 0, 'sur'],
+  ['Le propre', 'Baignoire Twistshake', "Qu'on prendra d'occasion", 1, 20, 0, 'sur'],
+  ['Le propre', 'Thermomètre de bain', '', 1, 10, 0, 'blanc'],
+  ['Le propre', 'Capes de bain', '', 2, 20, 1, 'blanc'],
+  ['Le propre', 'Sac à langer', '', 1, 60, 0, 'blanc'],
+  ['Le style', 'Bodies croisés en coton, naissance', "Croisés pour ne pas avoir à l'enfiler par la tête", 6, 9, 6, 'blanc'],
+  ['Le style', 'Pyjama, naissance', '', 1, 25, 1, 'blanc'],
+  ['Le style', 'Paires de chaussettes en coton, naissance', '', 2, 3.5, 0, 'blanc'],
+  ['Le style', 'Brassières de laine, naissance', '', 2, 20, 0, 'blanc'],
+  ['Le style', 'Bonnet, naissance', '', 1, 5, 0, 'blanc'],
+  ['Le style', 'Bavoirs', '', 4, 2.5, 0, 'blanc'],
+  ['Le style', 'Langes en tissu', '', 5, 10, 1, 'blanc'],
+  ['Le style', 'Bodies croisés en coton, 1 mois', "Croisés pour ne pas avoir à l'enfiler par la tête", 6, 9, 0, 'blanc'],
+  ['Le style', 'Pyjamas, 1 mois', '', 5, 25, 0, 'blanc'],
+  ['Le style', 'Brassières de laine, 1 mois', '', 2, 30, 0, 'blanc'],
+  ['Le style', 'Paires de chaussettes en coton, 1 mois', '', 4, 3.5, 0, 'blanc'],
+  ['Le style', 'Bonnet, 1 mois', '', 1, 5, 0, 'blanc'],
+  ['Le style', 'Gilets en coton, 1 mois', '', 2, 13, 0, 'blanc'],
+  ['Le style', 'Bodies croisés en coton, 3 mois', "Croisés pour ne pas avoir à l'enfiler par la tête", 6, 9, 2, 'blanc'],
+  ['Le style', 'Pyjamas, 3 mois', '', 5, 25, 0, 'blanc'],
+  ['Le style', 'Brassières de laine, 3 mois', '', 2, 30, 0, 'blanc'],
+  ['Le style', 'Paires de chaussettes en coton, 3 mois', '', 4, 3.5, 0, 'blanc'],
+  ['Le style', 'Bonnet, 3 mois', '', 1, 5, 0, 'blanc'],
+  ['Le style', 'Gilets en coton, 3 mois', '', 2, 13, 0, 'blanc'],
+  ['Le voyage', 'Porte-bébé', 'Omni Deluxe Mesh, Ergobaby', 1, 220, 1, 'sur'],
+  ['Le voyage', 'Écharpe de portage', 'Pas encore totalement décidé, sûrement une Love Radius', 1, 60, 0, 'sur'],
+  ["Le voyage", "Nid d'ange pour poussette", 'Sachant qu\'on a la Nuna Swiv', 1, 50, 0, 'blanc'],
+  ['Le voyage', 'Poussette avec nacelle', 'La Nuna Swiv avec nacelle LITL', 1, 811.15, 1, 'sur'],
+  ['Le voyage', 'Coque auto avec socle', 'Cloud T-Size avec sa base T', 1, 423, 1, 'sur']
+].map(function (a) {
+  return { cat: a[0], nom: a[1], note: a[2], qte: a[3], prix: a[4], offert: a[5], mode: a[6] };
+});
 
-/* --- mécanique ---------------------------------------------------------- */
+var SOUS = {
+  'Le dodo': 'Pour les nuits, les siestes et tout ce qui se passe entre les deux.',
+  'Le jeu': 'De quoi regarder le plafond avec un peu plus d\'ambition.',
+  'Le miam': 'Le biberon, le lait, et plus tard la chaise.',
+  'Le propre': 'Le change, le bain, et la logistique qui va avec.',
+  'Le style': 'Taille naissance, 1 mois, 3 mois : il grandit vite.',
+  'Le voyage': 'Pour sortir, et pour qu\'on sorte avec lui.'
+};
 
-var $ = function (id) { return document.getElementById(id); };
 var filtre = 'Tout';
-var jeton = new URLSearchParams(location.search).get('t') || '';
+var $ = function (id) { return document.getElementById(id); };
+var euros = function (v) { return v == null ? '' : v.toLocaleString('fr-FR', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }) + ' €'; };
+var cats = []; ARTICLES.forEach(function (a) { if (cats.indexOf(a.cat) < 0) cats.push(a.cat); });
 
-if (jeton) {
-  $('retour-nav').innerHTML = '<a href="index.html?t=' + encodeURIComponent(jeton)
-    + '">‹ Retour aux pronostics</a>';
+function pieces(a) {
+  if (a.qte <= 1) return '';
+  var h = '<span class="pieces" aria-label="' + a.offert + ' sur ' + a.qte + ' déjà offerts">';
+  for (var i = 0; i < a.qte; i++) h += '<i class="' + (i < a.offert ? 'pris' : '') + '"></i>';
+  return h + '<span>' + a.offert + '/' + a.qte + '</span></span>';
 }
 
-var cats = ['Tout'].concat(CADEAUX.map(function (g) { return g.c; })
-  .filter(function (v, i, a) { return a.indexOf(v) === i; }));
+function ligne(a) {
+  var complet = a.offert >= a.qte;
+  var reste = a.qte - a.offert;
+  return '<div class="article' + (complet ? ' complet' : '') + '">'
+    + '<div><div class="titre">' + a.nom + '</div>'
+    + (a.note ? '<div class="note">' + a.note + '</div>' : '')
+    + '<div class="meta">'
+    +   (complet ? '<span class="offert">Déjà offert</span>'
+                 : '<span class="badge ' + a.mode + '">● ' + (a.mode === 'sur' ? 'on sait ce qu\'on veut' : 'carte blanche') + '</span>')
+    +   pieces(a)
+    + '</div></div>'
+    + '<div class="prix">' + (complet ? '' : a.prix == null ? '<small>prix libre</small>' : euros(a.prix)
+        + (a.qte > 1 ? '<small>l\'unité · ' + reste + ' à offrir</small>' : ''))
+    + '</div></div>';
+}
 
 function rendre() {
-  $('filtres').innerHTML = cats.map(function (c) {
-    return '<button class="filtre' + (c === filtre ? ' actif' : '') + '" data-c="' + c + '">'
-      + c + '</button>';
+  $('filtres').innerHTML = ['Tout'].concat(cats).map(function (c) {
+    var n = ARTICLES.filter(function (a) { return (c === 'Tout' || a.cat === c) && a.offert < a.qte; }).length;
+    return '<button class="filtre" id="f-' + c.replace(/\W/g, '') + '" aria-pressed="' + (c === filtre) + '" data-c="' + c + '">'
+      + c + '<span class="n">' + n + '</span></button>';
   }).join('');
 
-  var liste = CADEAUX.filter(function (g) { return filtre === 'Tout' || g.c === filtre; });
-
-  $('cadeaux').innerHTML = liste.map(function (g) {
-    return '<div class="cadeau' + (g.r ? ' pris' : '') + '">'
-      + '<div class="vignette">' + g.e + '</div>'
-      + '<div class="corps"><div class="nom">' + g.n + '</div>'
-      +   '<div class="meta">' + g.c + ' · ' + g.p + ' €</div></div>'
-      + (g.r ? '<span class="etat">Déjà pris</span>' : '')
-      + '</div>';
+  $('liste').innerHTML = cats.filter(function (c) { return filtre === 'Tout' || c === filtre; }).map(function (c) {
+    var items = ARTICLES.filter(function (a) { return a.cat === c; })
+      .sort(function (x, y) { return (x.offert >= x.qte) - (y.offert >= y.qte); });
+    return '<section class="chapitre"><h2>' + c + '</h2><p class="sous">' + (SOUS[c] || '') + '</p>'
+      + items.map(ligne).join('') + '</section>';
   }).join('');
 
-  var pris = CADEAUX.filter(function (g) { return g.r; }).length;
-  $('jauge').style.width = (pris / CADEAUX.length * 100) + '%';
-  $('jauge-txt').textContent = pris + ' cadeau' + (pris > 1 ? 'x' : '') + ' sur '
-    + CADEAUX.length + ' déjà réservé' + (pris > 1 ? 's' : '');
+  var total = 0, fait = 0, restants = 0;
+  ARTICLES.forEach(function (a) {
+    if (a.prix != null) { total += a.prix * a.qte; fait += a.prix * Math.min(a.offert, a.qte); }
+    if (a.offert < a.qte) restants++;
+  });
+  $('barre').style.width = (fait / total * 100).toFixed(1) + '%';
+  $('avance').textContent = Math.round(fait / total * 100) + ' % de la liste déjà offerte';
+  $('reste').textContent = restants + ' articles encore à offrir';
 
   document.querySelectorAll('.filtre').forEach(function (b) {
     b.onclick = function () { filtre = b.dataset.c; rendre(); };
@@ -208,20 +257,26 @@ function rendre() {
 
 function ouvrir() {
   $('verrou').classList.add('hidden');
-  $('intro').classList.remove('hidden');
-  $('articles').classList.remove('hidden');
+  $('contenu').classList.remove('hidden');
   rendre();
   try { sessionStorage.setItem('steevie-liste', 'ok'); } catch (e) {}
 }
 
+/* Comparaison sans majuscules ni accents : « merciatoi » passe aussi, pour
+   ne pas bloquer quelqu'un sur un clavier sans à. */
+function normal(t) {
+  return String(t || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 $('btn-code').onclick = function () {
-  if ($('code').value.trim() === CODE) { ouvrir(); return; }
-  $('code-err').textContent = 'Code incorrect.';
+  if (normal($('code').value) === normal(CODE)) { ouvrir(); return; }
   $('code-err').classList.remove('hidden');
 };
 $('code').onkeydown = function (e) { if (e.key === 'Enter') $('btn-code').click(); };
-
 try { if (sessionStorage.getItem('steevie-liste') === 'ok') ouvrir(); } catch (e) {}
+
+var jeton = new URLSearchParams(location.search).get('t');
+if (jeton) $('retour').href = 'index.html?t=' + encodeURIComponent(jeton);
 </script>
 </body>
 </html>

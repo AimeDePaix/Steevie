@@ -40,7 +40,7 @@ function afficher(d) {
 function tableau(entries, revele) {
   var trP = stvTranchesPoids(CFG), trT = stvTranchesTaille(CFG);
   var lib = function (l, c) {
-    for (var i = 0; i < l.length; i++) if (l[i].cle === c) return l[i].libelle;
+    for (var i = 0; i < l.length; i++) if (l[i].cle === c) return l[i].nom || l[i].libelle;
     return '—';
   };
 

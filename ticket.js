@@ -189,7 +189,7 @@ function libelleReponse(cfg, cle, v) {
 
 function chercheLibelle(tranches, cle) {
   for (var i = 0; i < tranches.length; i++) {
-    if (tranches[i].cle === cle) return tranches[i].libelle;
+    if (tranches[i].cle === cle) return tranches[i].nom || tranches[i].libelle;
   }
   return String(cle);
 }

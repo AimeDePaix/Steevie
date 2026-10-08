@@ -872,3 +872,11 @@ section.nue {
 }
 
 .raye { text-decoration: line-through; opacity: .5; }
+
+/* Les repères de maman et papa, aux bords de la case du milieu */
+.gradu.repere i { width: 2px; height: 10px; }
+.gradu.repere em { font-weight: 500; font-size: 11px; white-space: nowrap; }
+.gradu.repere-m i { background: var(--fille); }
+.gradu.repere-m em { color: var(--fille); }
+.gradu.repere-p i { background: var(--garcon); }
+.gradu.repere-p em { color: var(--garcon); }

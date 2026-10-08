@@ -187,6 +187,10 @@ function stvTranchesPoids(cfg) {
   }
   var d = b[b.length - 1];
   t.push({ cle: 'gt', libelle: stvKg(d) + ' ou plus', court: stvKg(d).replace(' kg', '') });
+
+  // Des noms optionnels, un par tranche, dans l'onglet Config (poids_noms).
+  var noms = String(cfg.poids_noms || '').split('|');
+  if (noms.length === t.length) t.forEach(function (x, k) { x.nom = noms[k].trim(); });
   return t;
 }
 
@@ -309,7 +313,21 @@ function stvDateReelle(cfg, v) {
   return v || cfg.terme;
 }
 
+/**
+ * Le poids. Si l'onglet Config fixe les cotes (poids_cotes, une par tranche,
+ * ex. « 2.5|2.5|4 »), on les applique telles quelles : la « probabilité »
+ * renvoyée est simplement 1 / cote, ce qui redonne exactement la cote fixée.
+ * Sinon, retour au modèle gaussien.
+ */
 function stvLoiPoids(cfg, sexe) {
+  var fixes = String(cfg.poids_cotes || '').split('|').map(Number).filter(function (v) { return v > 1; });
+  var tr = stvTranchesPoids(cfg);
+  if (fixes.length === tr.length) {
+    var q = {};
+    tr.forEach(function (t, k) { q[t.cle] = 1 / fixes[k]; });
+    return q;
+  }
+
   var mu = cfg['poids_moyen_' + sexe] + stvBorne(cfg.ajust_poids, cfg.ajust_poids_max);
   var sd = cfg.poids_sd, p = {}, i;
   var b = stvBornes(cfg.poids_bornes);
