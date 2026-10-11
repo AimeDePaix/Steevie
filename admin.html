@@ -38,11 +38,48 @@
     <p class="note" id="phase-note"></p>
   </section>
 
+  <!-- inviter -->
+  <section id="s-inviter" class="hidden">
+    <h2>Inviter quelqu'un</h2>
+    <p class="sub">Le prénom apparaît dans le mail (« Salut Mamie, »). Le lien
+      personnel est créé et envoyé tout de suite, et la personne s'ajoute à
+      l'onglet Invités.</p>
+    <label class="q" for="inv-nom">Prénom ou surnom</label>
+    <input type="text" id="inv-nom" maxlength="40" placeholder="Mamie">
+    <label class="q" for="inv-email" style="margin-top:12px">Adresse mail</label>
+    <input type="email" id="inv-email" placeholder="adresse@exemple.fr" autocomplete="off">
+    <button class="cta" id="btn-inviter" style="margin-top:14px">Envoyer l'invitation</button>
+    <p class="note" id="inv-msg"></p>
+
+    <details class="aide">
+      <summary>Et dans le Sheet, qu'est-ce que je touche ?</summary>
+      <ul>
+        <li><strong>Ne modifie jamais la colonne C (token)</strong> d'une personne qui
+          a déjà reçu son lien : son lien cesserait de marcher et elle perdrait
+          ses pronos.</li>
+        <li><strong>Quelqu'un a perdu son mail</strong> : lien « Renvoyer son lien » dans la
+          liste des participants ci-dessous. Rien à toucher dans le Sheet.</li>
+        <li><strong>Faute de frappe dans une adresse</strong> : corrige la colonne A,
+          puis « Renvoyer son lien ».</li>
+        <li><strong>Retirer quelqu'un du jeu</strong> : supprime sa ligne entière dans
+          Invités. Ses pronos disparaissent du tableau et du classement.</li>
+        <li>Les colonnes D (invité le), E (pseudo), F (progression) et G
+          (faire-part) se remplissent toutes seules.</li>
+        <li>Tu peux toujours ajouter plusieurs personnes d'un coup dans le Sheet
+          (colonnes A et B seulement) puis lancer <code>envoyerInvitations</code>
+          dans Apps Script : seules les nouvelles lignes reçoivent un mail.</li>
+      </ul>
+    </details>
+  </section>
+
   <!-- saisie du résultat -->
   <section id="s-resultat" class="hidden">
     <h2>Le résultat réel</h2>
     <p class="sub">Renseigne ce qu'il s'est vraiment passé. Rien n'est publié
-      tant que la phase n'est pas sur « révélé ».</p>
+      tant que la phase n'est pas sur « révélé ». Une naissance datée
+      d'aujourd'hui ou d'avant ferme les paris d'office. Pour peaufiner le
+      faire-part pendant que les paris sont ouverts, saisis une date à venir
+      (en décembre par exemple) : rien ne se ferme, rien ne se voit.</p>
     <div id="champs-resultat"></div>
     <button class="cta" id="btn-resultat" style="margin-top:18px">Enregistrer le résultat</button>
     <p class="note" id="resultat-msg"></p>
@@ -59,9 +96,13 @@
   <!-- pseudos -->
   <section id="s-gens" class="hidden">
     <h2>Les participants</h2>
-    <p class="sub">Tu peux corriger un pseudo illisible ou trop anonyme.
-      La personne le verra à sa prochaine visite.</p>
+    <p class="sub">En haut, ceux qui ont commencé sans valider : une petite
+      relance leur fera du bien. Tu peux aussi corriger un pseudo illisible,
+      la personne le verra à sa prochaine visite.</p>
+    <p class="note" id="gens-resume"></p>
+    <button class="link" id="btn-actualiser">Actualiser</button>
     <div id="gens"></div>
+    <p class="note" id="gens-msg"></p>
   </section>
 
   <!-- messages -->
@@ -111,8 +152,12 @@
   <!-- remise à zéro -->
   <section id="s-reset" class="hidden">
     <h2>Remise à zéro</h2>
-    <p class="sub">Après tes essais, pour repartir propre. Le code et les
-      réglages ne sont jamais touchés.</p>
+    <p class="sub">« Effacer la naissance » retire le résultat saisi et les deux
+      photos, rouvre les paris, et garde tous les pronostics : c'est le bouton
+      après un test. « Tout effacer » fait la même chose et efface en plus tous
+      les pronostics, les mots du livre d'or et les avancements : tout le monde
+      rejoue de zéro. Les invités, leurs liens et leurs pseudos restent. Une
+      fois le jeu lancé, ne touche plus à ce second bouton.</p>
     <div class="actions">
       <button class="cta ghost" id="btn-reset-resultat">Effacer la naissance</button>
       <button class="cta ghost" id="btn-reset-tout">Tout effacer</button>

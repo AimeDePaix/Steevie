@@ -41,8 +41,11 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-photos', 's-envoi', 's-reset']
+      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-photos', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
+      // Les messages d'une action précédente n'ont plus lieu d'être.
+      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg'].forEach(function (i) { $(i).textContent = ''; });
+      $('bilan').innerHTML = '';
       dessinerEtat();
       dessinerChamps();
       dessinerGens();
@@ -93,17 +96,48 @@ function bloc(v, t) {
        + '<span class="stat-t">' + t + '</span></div>';
 }
 
+/* Où en est chacun : 0 en cours, 1 pas commencé, 2 validé (ordre d'affichage). */
+var ETAPES = { regles: 'lit les règles', indices: 'fait le quiz', pronos: 'remplit son formulaire' };
+function statut(g) {
+  if (g.valide) return { rang: 2, cls: 'st-ok', txt: 'validé' };
+  if (g.progression) return { rang: 0, cls: 'st-cours', txt: 'en cours : ' + (ETAPES[g.progression] || g.progression) };
+  if (g.pseudo) return { rang: 0, cls: 'st-cours', txt: 'en cours : pseudo choisi' };
+  return { rang: 1, cls: 'st-rien', txt: 'pas encore commencé' };
+}
+
 function dessinerGens() {
-  $('gens').innerHTML = (ETAT.gens || []).map(function (g) {
+  var gens = (ETAT.gens || []).map(function (g) { g.st = statut(g); return g; })
+    .sort(function (a, b) { return a.st.rang - b.st.rang || String(a.nom).localeCompare(String(b.nom)); });
+
+  var n = [0, 0, 0];
+  gens.forEach(function (g) { n[g.st.rang]++; });
+  $('gens-resume').textContent = gens.length
+    ? n[2] + ' validé' + (n[2] > 1 ? 's' : '') + ' · ' + n[0] + ' en cours · ' + n[1] + ' pas commencé' + (n[1] > 1 ? 's' : '')
+    : '';
+
+  $('gens').innerHTML = gens.map(function (g) {
     return '<div class="ligne-gens">'
-      + '<div class="gens-id"><strong>' + echappe(g.nom) + '</strong><span>' + echappe(g.email) + '</span></div>'
+      + '<div class="gens-id"><strong>' + echappe(g.nom) + '</strong>'
+      +   '<em class="statut ' + g.st.cls + '">' + echappe(g.st.txt) + '</em>'
+      +   '<span>' + echappe(g.email) + (g.invite ? ' · invité le ' + echappe(g.invite) : '') + '</span>'
+      +   '<button class="link relancer" data-t="' + echappe(g.token) + '">Renvoyer son lien</button></div>'
       + '<input type="text" maxlength="14" value="' + echappe(g.pseudo || '') + '" data-t="'
       +   echappe(g.token) + '" placeholder="sans pseudo">'
-      + '<button class="cadeau-btn" data-t="' + echappe(g.token) + '">OK</button>'
+      + '<button class="cadeau-btn ok-pseudo" data-t="' + echappe(g.token) + '">OK</button>'
       + '</div>';
-  }).join('') || '<p class="sub">Personne n\'est encore inscrit.</p>';
+  }).join('') || '<p class="sub">Personne n\'est encore invité.</p>';
 
-  document.querySelectorAll('#gens button').forEach(function (b) {
+  document.querySelectorAll('#gens .relancer').forEach(function (b) {
+    b.onclick = function () {
+      b.disabled = true;
+      poster({ action: 'admin_relancer', token: b.dataset.t }, function (d) {
+        b.textContent = 'Lien renvoyé ✓';
+        $('gens-msg').textContent = d.message;
+      });
+    };
+  });
+
+  document.querySelectorAll('#gens .ok-pseudo').forEach(function (b) {
     b.onclick = function () {
       var champ = document.querySelector('#gens input[data-t="' + b.dataset.t + '"]');
       poster({ action: 'admin_pseudo', token: b.dataset.t, pseudo: champ.value },
@@ -186,12 +220,37 @@ function initialeDe(prenom) {
   return /[A-Z]/.test(c) ? c : '';
 }
 
+$('btn-actualiser').onclick = function () { entrer(); };
+
+$('btn-inviter').onclick = function () {
+  var nom = $('inv-nom').value.trim(), email = $('inv-email').value.trim();
+  $('btn-inviter').disabled = true;
+  $('inv-msg').textContent = 'Envoi…';
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'admin_inviter', nom: nom, email: email, k: CLE })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      $('btn-inviter').disabled = false;
+      if (!d.ok) { $('inv-msg').textContent = d.error; return; }
+      $('inv-nom').value = ''; $('inv-email').value = '';
+      entrer();
+      $('inv-msg').textContent = d.message;
+    })
+    .catch(function () { $('btn-inviter').disabled = false; $('inv-msg').textContent = 'Connexion impossible.'; });
+};
+
 $('btn-resultat').onclick = function () {
   var r = {};
   CHAMPS.forEach(function (c) { r[c.cle] = $('r-' + c.cle).value.trim(); });
   poster({ action: 'admin_resultat', resultat: r }, function (d) {
     ETAT.resultat = d.resultat;
-    $('resultat-msg').textContent = 'Enregistré. Tu peux calculer le classement.';
+    var fermee = d.phase === 'closed' && ETAT.phase === 'open';
+    if (d.phase) { ETAT.phase = d.phase; dessinerEtat(); }
+    $('resultat-msg').textContent = 'Enregistré. Tu peux calculer le classement.'
+      + (fermee ? ' Les paris viennent d\'être fermés automatiquement.' : '');
   });
 };
 
@@ -238,7 +297,7 @@ $('btn-bilan').onclick = function () {
 };
 
 $('btn-reset-resultat').onclick = function () {
-  if (!confirm('Effacer la naissance saisie et rouvrir le jeu ? Les pronostics sont conservés.')) return;
+  if (!confirm('Effacer la naissance saisie et les photos, et rouvrir le jeu ? Les pronostics sont conservés.')) return;
   poster({ action: 'admin_reset', quoi: 'resultat' }, function (d) {
     $('reset-msg').textContent = d.message;
     entrer();
