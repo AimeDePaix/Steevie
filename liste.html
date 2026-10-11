@@ -143,32 +143,40 @@ footer { text-align: center; color: var(--soft); font: 400 13px/1.6 var(--mono);
    quand quelqu'un réserve. Le nom de qui offre n'apparaît jamais sur la page. */
 var CODE = 'Merciàtoi';
 
+/* La valeur cumulée de tout ce qui est déjà entièrement offert. Les prix de
+   ces articles sont retirés de la liste ci-dessous, pour que personne ne les
+   lise dans le code ; ce total garde l'avancement juste.
+   QUAND UN ARTICLE DEVIENT ENTIÈREMENT OFFERT : ajoute ici son prix × sa
+   quantité, puis remplace son prix par null dans sa ligne. (Facultatif : si tu
+   oublies, rien ne casse, son prix reste simplement lisible dans le code.) */
+var DEJA_OFFERT = 2048.15;
+
 var ARTICLES = [
   /* [catégorie, nom, commentaire, quantité, prix unitaire, offert, mode, prix masqué, permanent]
      « permanent » : un article toujours ouvert, jamais compté ni barré.
      Le prix sert au calcul de l'avancement ; il ne s'affiche que pour les
      articles « on sait ce qu'on veut » encore à offrir, et jamais si le
      dernier champ vaut true. */
-  ['Le dodo', 'Transat pour chaise haute', 'Pour garder Steevie avec nous, même à table', 1, 115, 1, 'sur'],
-  ['Le dodo', 'Berceau', 'En cododo, collé à notre lit', 1, 200, 1, 'sur'],
+  ['Le dodo', 'Transat pour chaise haute', 'Pour garder Steevie avec nous, même à table', 1, null, 1, 'sur'],
+  ['Le dodo', 'Berceau', 'En cododo, collé à notre lit', 1, null, 1, 'sur'],
   ['Le dodo', 'Alèses de matelas', 'Adaptées au matelas du berceau', 2, 20, 0, 'sur', true],
   ['Le dodo', 'Draps-housses', 'Adaptés au matelas du berceau', 2, 20, 0, 'sur', true],
   ['Le dodo', 'Gigoteuse 1-6 mois, tog 1', '', 2, 35, 0, 'blanc'],
   ['Le dodo', 'Gigoteuse 1-6 mois, tog 2.5', '', 2, 35, 1, 'blanc'],
   ['Le jeu', "Tapis d'éveil", '', 1, 140, 0, 'sur'],
   ['Le jeu', "Arche d'éveil", '', 1, null, 0, 'blanc'],
-  ['Le miam', 'Chaise haute évolutive', '', 1, 100, 1, 'sur'],
+  ['Le miam', 'Chaise haute évolutive', '', 1, null, 1, 'sur'],
   ['Le miam', 'Chauffe-biberon', '', 1, 60, 0, 'sur'],
   ['Le miam', 'Égouttoir à biberons', '', 1, 20, 0, 'sur'],
   ['Le miam', 'Biberons', 'Lot de 2, 125 ml', 2, 9, 0, 'sur'],
-  ['Le propre', 'Commode à langer', "D'occasion, plan à langer inclus", 1, 100, 1, 'sur'],
+  ['Le propre', 'Commode à langer', "D'occasion, plan à langer inclus", 1, null, 1, 'sur'],
   ['Le propre', 'Matelas à langer', '', 1, 65.95, 0, 'sur'],
   ['Le propre', 'Baignoire', '', 1, 20, 0, 'sur'],
   ['Le propre', 'Thermomètre de bain', '', 1, 10, 0, 'blanc'],
   ['Le propre', 'Capes de bain', '', 2, 20, 1, 'blanc'],
   ['Le propre', 'Sac à langer', '', 1, 60, 0, 'blanc'],
-  ['Le style', 'Bodies croisés en coton, naissance', "Croisés pour ne pas avoir à l'enfiler par la tête", 6, 9, 6, 'blanc'],
-  ['Le style', 'Pyjama, naissance', '', 1, 25, 1, 'blanc'],
+  ['Le style', 'Bodies croisés en coton, naissance', "Croisés pour ne pas avoir à l'enfiler par la tête", 6, null, 6, 'blanc'],
+  ['Le style', 'Pyjama, naissance', '', 1, null, 1, 'blanc'],
   ['Le style', 'Paires de chaussettes en coton, naissance', '', 2, 3.5, 0, 'blanc'],
   ['Le style', 'Brassières de laine, naissance', '', 2, 20, 0, 'blanc'],
   ['Le style', 'Bonnet, naissance', '', 1, 5, 0, 'blanc'],
@@ -186,9 +194,9 @@ var ARTICLES = [
   ['Le style', 'Paires de chaussettes en coton, 3 mois', '', 4, 3.5, 0, 'blanc'],
   ['Le style', 'Bonnet, 3 mois', '', 1, 5, 0, 'blanc'],
   ['Le style', 'Gilets en coton, 3 mois', '', 2, 13, 0, 'blanc'],
-  ['Le voyage', 'Porte-bébé', '', 1, 220, 1, 'sur'],
-  ['Le voyage', 'Poussette avec nacelle', '', 1, 811.15, 1, 'sur'],
-  ['Le voyage', 'Coque auto', 'Avec sa base', 1, 423, 1, 'sur'],
+  ['Le voyage', 'Porte-bébé', '', 1, null, 1, 'sur'],
+  ['Le voyage', 'Poussette avec nacelle', '', 1, null, 1, 'sur'],
+  ['Le voyage', 'Coque auto', 'Avec sa base', 1, null, 1, 'sur'],
   ['Divers', 'Shooting photo de grossesse', '', 1, null, 1, 'sur'],
   ['Divers', 'Contribution libre', 'Le montant de ton choix, pour tout ce qu\'on aura oublié de prévoir', 1, null, 0, 'blanc', false, true],
   ['Divers', 'Ta suggestion', 'Un objet qui t\'a sauvé la mise avec tes enfants ? Dis-le-nous, on est preneurs', 1, null, 0, 'blanc', false, true]
@@ -251,7 +259,7 @@ function rendre() {
       + items.map(ligne).join('') + '</section>';
   }).join('');
 
-  var total = 0, fait = 0, restants = 0;
+  var total = DEJA_OFFERT, fait = DEJA_OFFERT, restants = 0;
   ARTICLES.forEach(function (a) {
     if (a.prix != null) { total += a.prix * a.qte; fait += a.prix * Math.min(a.offert, a.qte); }
     if (a.offert < a.qte && !a.permanent) restants++;
