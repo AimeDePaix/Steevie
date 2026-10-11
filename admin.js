@@ -96,10 +96,10 @@ function bloc(v, t) {
 function dessinerGens() {
   $('gens').innerHTML = (ETAT.gens || []).map(function (g) {
     return '<div class="ligne-gens">'
-      + '<div class="gens-id"><strong>' + g.nom + '</strong><span>' + g.email + '</span></div>'
-      + '<input type="text" maxlength="14" value="' + (g.pseudo || '') + '" data-t="'
-      +   g.token + '" placeholder="sans pseudo">'
-      + '<button class="cadeau-btn" data-t="' + g.token + '">OK</button>'
+      + '<div class="gens-id"><strong>' + echappe(g.nom) + '</strong><span>' + echappe(g.email) + '</span></div>'
+      + '<input type="text" maxlength="14" value="' + echappe(g.pseudo || '') + '" data-t="'
+      +   echappe(g.token) + '" placeholder="sans pseudo">'
+      + '<button class="cadeau-btn" data-t="' + echappe(g.token) + '">OK</button>'
       + '</div>';
   }).join('') || '<p class="sub">Personne n\'est encore inscrit.</p>';
 
@@ -119,10 +119,10 @@ function dessinerMessages() {
       + (m.length > 1 ? 's' : '') + '. Personne d\'autre que vous ne les voit.'
     : 'Aucun message pour l\'instant.';
   $('messages').innerHTML = m.map(function (x) {
-    return '<div class="mot"><div class="mot-texte">' + x.texte.replace(/\n/g, '<br>')
-      + '</div><div class="mot-sign">— ' + x.pseudo + ', pour '
+    return '<div class="mot"><div class="mot-texte">' + echappe(x.texte).replace(/\n/g, '<br>')
+      + '</div><div class="mot-sign">— ' + echappe(x.pseudo) + ', pour '
       + (x.pour === 'parents' ? 'les parents' : 'Steevie')
-      + '<span class="mot-date">' + x.date + '</span></div></div>';
+      + '<span class="mot-date">' + echappe(x.date) + '</span></div></div>';
   }).join('');
 }
 
@@ -210,7 +210,7 @@ $('btn-bilan').onclick = function () {
       d.classement.forEach(function (j, i) {
         h += '<tr' + (i === 0 ? ' class="moi"' : '') + '>'
           + '<td class="num">' + (j.rang || '—') + '</td>'
-          + '<td class="pseudo">' + j.pseudo + '</td>'
+          + '<td class="pseudo">' + echappe(j.pseudo) + '</td>'
           + '<td class="num">' + (j.trouves.join(', ') || '—') + '</td>'
           + '<td class="num" style="text-align:right">' + j.score.toLocaleString('fr-FR') + '</td>'
           + '</tr>';
@@ -221,8 +221,8 @@ $('btn-bilan').onclick = function () {
         h += '<h3 class="sstitre">Le palmarès</h3><div class="palmares">';
         d.prix.forEach(function (x) {
           h += '<div class="lot"><div class="lot-titre">' + x.titre + '</div>'
-            + '<div class="lot-txt"><strong>' + x.gagnants.join(', ') + '</strong>'
-            + (x.detail ? ' (' + x.detail + ')' : '') + '<small>' + x.lot + '</small></div></div>';
+            + '<div class="lot-txt"><strong>' + x.gagnants.map(echappe).join(', ') + '</strong>'
+            + (x.detail ? ' (' + echappe(x.detail) + ')' : '') + '<small>' + x.lot + '</small></div></div>';
         });
         h += '</div>';
       }
@@ -349,4 +349,13 @@ function poster(payload, ok) {
       ok(d);
     })
     .catch(function () { alert('Connexion impossible.'); });
+}
+
+
+/* Tout ce qui vient des invités (pseudo, nom, message) est affiché comme du
+   texte, jamais interprété comme du code. */
+function echappe(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
