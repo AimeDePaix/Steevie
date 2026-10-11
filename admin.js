@@ -297,7 +297,7 @@ $('btn-bilan').onclick = function () {
 };
 
 $('btn-reset-resultat').onclick = function () {
-  if (!confirm('Effacer la naissance saisie et les photos, et rouvrir le jeu ? Les pronostics sont conservés.')) return;
+  if (!confirm('Effacer la naissance saisie et les photos ? Les pronostics sont conservés.')) return;
   poster({ action: 'admin_reset', quoi: 'resultat' }, function (d) {
     $('reset-msg').textContent = d.message;
     entrer();
