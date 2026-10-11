@@ -41,12 +41,13 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-envoi', 's-reset']
+      ['s-etat', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-photos', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
       dessinerEtat();
       dessinerChamps();
       dessinerGens();
       dessinerMessages();
+      dessinerPhotos();
     })
     .catch(function () {
       show('s-cle', true);
@@ -208,13 +209,23 @@ $('btn-bilan').onclick = function () {
             + '<th>Rang</th><th>Qui</th><th>Trouvé</th><th>Points</th></tr></thead><tbody>';
       d.classement.forEach(function (j, i) {
         h += '<tr' + (i === 0 ? ' class="moi"' : '') + '>'
-          + '<td class="num">' + (i + 1) + '</td>'
+          + '<td class="num">' + (j.rang || '—') + '</td>'
           + '<td class="pseudo">' + j.pseudo + '</td>'
           + '<td class="num">' + (j.trouves.join(', ') || '—') + '</td>'
           + '<td class="num" style="text-align:right">' + j.score.toLocaleString('fr-FR') + '</td>'
           + '</tr>';
       });
       h += '</tbody></table>';
+
+      if (d.prix && d.prix.length) {
+        h += '<h3 class="sstitre">Le palmarès</h3><div class="palmares">';
+        d.prix.forEach(function (x) {
+          h += '<div class="lot"><div class="lot-titre">' + x.titre + '</div>'
+            + '<div class="lot-txt"><strong>' + x.gagnants.join(', ') + '</strong>'
+            + (x.detail ? ' (' + x.detail + ')' : '') + '<small>' + x.lot + '</small></div></div>';
+        });
+        h += '</div>';
+      }
 
       h += '<h3 class="sstitre">Réussite par question</h3><div>';
       d.parQuestion.forEach(function (q) {
@@ -249,8 +260,81 @@ $('btn-test').onclick = function () {
 
 $('btn-tous').onclick = function () {
   if (!confirm('Envoyer le faire-part définitif à tous les joueurs ? Cette action ne s\'annule pas.')) return;
-  poster({ action: 'admin_mail', test: false }, function (d) { $('envoi-msg').textContent = d.message; });
+  envoyerTous(false);
 };
+
+/* Un second envoi général demande une confirmation explicite. */
+function envoyerTous(force) {
+  fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'admin_mail', test: false, force: force, k: CLE })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.ok) { $('envoi-msg').textContent = d.message; return; }
+      if (d.deja && confirm(d.error + ' Le renvoyer quand même à tout le monde ?')) return envoyerTous(true);
+      $('envoi-msg').textContent = d.error;
+    })
+    .catch(function () { $('envoi-msg').textContent = 'Connexion impossible.'; });
+}
+
+/* ============================================================================
+   Les photos : réduites dans le navigateur (1600 px, JPEG) avant l'envoi,
+   pour que le mail reste léger et que l'envoi au serveur ne traîne pas.
+   ============================================================================ */
+
+function dessinerPhotos() {
+  ['bebe', 'famille'].forEach(function (slot) {
+    var src = ETAT.photos && ETAT.photos[slot];
+    $('cadre-' + slot).innerHTML = src ? '<img src="' + src + '" alt="">' : 'Pas encore de photo';
+    show('suppr-' + slot, !!src);
+
+    $('photo-' + slot).onchange = function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      $('photo-msg').textContent = 'Préparation de la photo…';
+      reduire(f, function (dataUrl) {
+        $('cadre-' + slot).innerHTML = '<img src="' + dataUrl + '" alt="">';
+        $('photo-msg').textContent = 'Envoi…';
+        poster({ action: 'admin_photo', slot: slot, data: dataUrl }, function () {
+          ETAT.photos = ETAT.photos || {};
+          ETAT.photos[slot] = dataUrl;
+          show('suppr-' + slot, true);
+          $('photo-msg').textContent = 'Photo enregistrée. Elle partira avec le faire-part.';
+        });
+      });
+    };
+
+    $('suppr-' + slot).onclick = function () {
+      poster({ action: 'admin_photo_suppr', slot: slot }, function () {
+        ETAT.photos[slot] = null;
+        $('cadre-' + slot).innerHTML = 'Pas encore de photo';
+        $('photo-' + slot).value = '';
+        show('suppr-' + slot, false);
+        $('photo-msg').textContent = 'Photo retirée.';
+      });
+    };
+  });
+}
+
+function reduire(fichier, fini) {
+  var lecteur = new FileReader();
+  lecteur.onload = function () {
+    var img = new Image();
+    img.onload = function () {
+      var max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      fini(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = function () { $('photo-msg').textContent = 'Ce fichier n\'est pas une image lisible.'; };
+    img.src = lecteur.result;
+  };
+  lecteur.readAsDataURL(fichier);
+}
 
 function poster(payload, ok) {
   payload.k = CLE;

@@ -72,6 +72,7 @@ function demarrer(d) {
   $('hello').textContent = 'Bonjour ' + d.prenom;
   $('mes-papa').innerHTML = enKg(CFG.papa_poids) + ' · ' + CFG.papa_taille + ' cm<br>né à ' + CFG.papa_heure;
   $('mes-maman').innerHTML = enKg(CFG.maman_poids) + ' · ' + CFG.maman_taille + ' cm<br>née à ' + CFG.maman_heure;
+  construireLots();
   $('regles-cloture').textContent = 'Tu peux revenir modifier tes réponses autant que tu veux '
     + 'jusqu\'au ' + jolieDate(CFG.cloture) + ' au soir. Ensuite, tout se fige.';
 
@@ -121,6 +122,30 @@ function etape(id, onglet) {
 
   stvNav(onglet || '');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* Les lots, lus dans Config pour pouvoir les changer sans toucher au code. */
+var LOTS = [
+  { cle: 'lot_1', titre: '1re place', defaut: 'Une photo de Steevie dans tes bras, tirée et encadrée, ou le bavoir de son premier biberon si tu préfères' },
+  { cle: 'lot_2', titre: '2e place', defaut: 'Le titre de parrain ou marraine honoraire, jusqu\'à son baptême' },
+  { cle: 'lot_3', titre: '3e place', defaut: 'Le droit de choisir le deuxième prénom de son doudou' },
+  { cle: 'lot_flair', titre: 'Prix Madame Irma', pour: 'à qui trouve le jour exact',
+    defaut: 'L\'empreinte du pied de Steevie, dédicacée' },
+  { cle: 'lot_eleve', titre: 'Prix du bon élève', pour: 'au plus de bonnes réponses, hors podium',
+    defaut: 'Une paire de chaussettes à la tête de Steevie' },
+  { cle: 'lot_patate', titre: 'Prix de la pomme de terre', pour: 'au plus de mauvaises réponses',
+    defaut: 'Une vraie pomme de terre, dédicacée d\'une empreinte de pied' },
+  { cle: 'lot_dernier', titre: 'Lanterne rouge', pour: 'au dernier du classement',
+    defaut: 'Une soirée de babysitting, offerte par les parents : tu gardes Steevie, nous on sort' }
+];
+
+function construireLots() {
+  $('lots-liste').innerHTML = LOTS.map(function (l, i) {
+    var txt = String(CFG[l.cle] || l.defaut);
+    return '<div class="lot' + (i < 3 ? ' podium' : '') + '">'
+      + '<div class="lot-titre">' + l.titre + (l.pour ? '<span>' + l.pour + '</span>' : '') + '</div>'
+      + '<div class="lot-txt">' + txt.replace(/</g, '&lt;') + '</div></div>';
+  }).join('');
 }
 
 /* Enregistre qu'une étape est franchie. On n'avance jamais à reculons. */

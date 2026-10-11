@@ -880,3 +880,61 @@ section.nue {
 .gradu.repere-m em { color: var(--fille); }
 .gradu.repere-p i { background: var(--garcon); }
 .gradu.repere-p em { color: var(--garcon); }
+
+/* ============================================================================
+   Les lots, en tête des règles
+   ============================================================================ */
+
+.lots {
+  margin: 18px 0 26px;
+  padding: 18px 18px 14px;
+  background: #FBF2D8;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+.lots-q {
+  margin: 0 0 4px;
+  font-family: var(--display);
+  font-variation-settings: "SOFT" 60, "WONK" 1;
+  font-weight: 600;
+  font-size: 22px;
+}
+.lots-intro { margin: 0 0 14px; font-size: 15px; color: var(--ink-soft); }
+.lot { display: grid; grid-template-columns: 9.5em 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(23, 37, 31, .1); }
+.lot:first-child { border-top: none; }
+.lot-titre { font: 500 13px/1.35 var(--mono); }
+.lot-titre span { display: block; font-weight: 400; font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+.lot.podium .lot-titre { font-weight: 700; }
+.lot-txt { font-size: 15px; line-height: 1.45; min-width: 0; }
+.lots-note { margin: 12px 0 0; font-size: 13px; color: var(--ink-soft); }
+@media (max-width: 460px) { .lot { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Le tableau public */
+table.suivi th.droite, table.suivi td.droite { text-align: right; padding-right: 0; }
+.secret { font: 400 12px/1 var(--mono); color: var(--ink-soft); letter-spacing: .04em; }
+.tag-parent {
+  display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 20px;
+  font: 500 10.5px/1.4 var(--mono); color: var(--ink-soft); background: var(--paper);
+}
+
+/* La console : photos et palmarès */
+.photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.photo-slot { display: grid; gap: 8px; align-content: start; }
+.photo-cadre {
+  aspect-ratio: 4 / 3; max-width: 100%; background: var(--paper); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font: 400 13px/1.4 var(--mono); color: var(--ink-soft); text-align: center; padding: 8px;
+}
+.photo-cadre img { width: 100%; height: 100%; object-fit: cover; }
+.photo-slot input[type=file] { font-size: 14px; max-width: 100%; }
+.palmares { margin-top: 18px; }
+.palmares .lot-txt small { display: block; color: var(--ink-soft); font-size: 13px; }
+
+/* Le tableau public tient dans la largeur d'un téléphone : on autorise le
+   retour à la ligne plutôt qu'un défilement horizontal que personne ne voit. */
+table.suivi.public { white-space: normal; }
+table.suivi.public td, table.suivi.public th { padding-right: 8px; }
+table.suivi.public td.num { font-size: 12.5px; }
+table.suivi.public td.droite { white-space: nowrap; }
+table.suivi.public .pastille { padding: 2px 8px; font-size: 11.5px; }
+@media (max-width: 460px) { .tag-parent { display: block; width: max-content; margin: 3px 0 0; } }

@@ -71,11 +71,36 @@
     <div id="messages"></div>
   </section>
 
+  <!-- photos -->
+  <section id="s-photos" class="hidden">
+    <h2>Les photos du faire-part</h2>
+    <p class="sub">Elles partent dans le mail de chaque joueur : la première sous
+      le prénom, la seconde à la fin. Une photo est réduite avant l'envoi, inutile
+      de la retoucher.</p>
+    <div class="photos">
+      <div class="photo-slot">
+        <label class="q" for="photo-bebe">Le bébé</label>
+        <div class="photo-cadre" id="cadre-bebe">Pas encore de photo</div>
+        <input type="file" id="photo-bebe" accept="image/*">
+        <button class="link hidden" id="suppr-bebe">Retirer cette photo</button>
+      </div>
+      <div class="photo-slot">
+        <label class="q" for="photo-famille">Nous trois</label>
+        <div class="photo-cadre" id="cadre-famille">Pas encore de photo</div>
+        <input type="file" id="photo-famille" accept="image/*">
+        <button class="link hidden" id="suppr-famille">Retirer cette photo</button>
+      </div>
+    </div>
+    <p class="note" id="photo-msg"></p>
+  </section>
+
   <!-- envoi -->
   <section id="s-envoi" class="hidden">
     <h2>Le faire-part</h2>
-    <p class="sub">Chaque joueur reçoit l'annonce, son rang, son score et le
-      détail de ce qu'il avait trouvé. Envoie-toi toujours un test d'abord.</p>
+    <p class="sub">Chaque joueur reçoit l'annonce, les photos, son rang, son
+      tableau détaillé et le palmarès. Le test part à toi seul et marche à tout
+      moment, avant même la révélation : retouche et renvoie-le autant que tu
+      veux. L'envoi à tous exige la phase « révélé », et ne part qu'une fois.</p>
     <div class="actions">
       <button class="cta ghost" id="btn-test">M'envoyer un test</button>
       <button class="cta" id="btn-tous">Envoyer à tous</button>
