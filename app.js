@@ -332,6 +332,18 @@ function construireQuestions() {
     box.appendChild(d);
   });
 
+  // Le terme, tiré du réglage « terme » de l'onglet Config.
+  if (CFG.terme) {
+    var jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    var pt = String(CFG.terme).split('-');
+    var jt = new Date(Number(pt[0]), Number(pt[1]) - 1, Number(pt[2])).getDay();
+    $('q-date').querySelector('.chapo').innerHTML =
+      '<p class="qhint">Le terme est prévu le <strong>' + jours[jt] + ' '
+      + jolieDate(CFG.terme).replace(/ \d{4}$/, '') + '</strong>. Mais seuls 4 % des bébés '
+      + 'naissent pile ce jour-là, et la plupart arrivent un peu avant : à toi de voir '
+      + 'si Steevie sera ponctuel.</p>';
+  }
+
   $('q-ascendant').querySelector('.chapo').innerHTML =
     '<p class="qhint">Pour les plus superstitieux d\'entre nous. L\'ascendant n\'est pas '
     + 'le signe du zodiaque : c\'est la constellation qui se levait à l\'horizon Est à la '
@@ -425,7 +437,9 @@ function pastilles(zone, q, loi, cotes, choisi) {
     b.className = 'chip' + (impossible ? ' off' : '') + (patate ? ' patate' : '')
       + ((o.v === 'avant' || o.v === 'apres') ? ' balai' : '');
     b.dataset.v = o.v;
-    b.innerHTML = '<span class="lbl">' + o.l + '</span><span class="cote">'
+    var terme = (q.cle === 'date' && o.v === '0')
+      ? '<small style="display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7">terme</small>' : '';
+    b.innerHTML = '<span class="lbl">' + o.l + terme + '</span><span class="cote">'
       + (impossible ? '—' : stvFmtCote(patate ? STV_COTE_PATATE : cotes[o.v])) + '</span>';
     if (String(choisi) === String(o.v)) b.setAttribute('aria-pressed', 'true');
     b.onclick = function () {
