@@ -57,8 +57,9 @@
         <li><strong>Ne modifie jamais la colonne C (token)</strong> d'une personne qui
           a déjà reçu son lien : son lien cesserait de marcher et elle perdrait
           ses pronos.</li>
-        <li><strong>Quelqu'un a perdu son mail</strong> : lien « Renvoyer son lien » dans la
-          liste des participants ci-dessous. Rien à toucher dans le Sheet.</li>
+        <li><strong>Quelqu'un a perdu son mail, ou l'a reçu en spam</strong> : « Copier son
+          lien » dans la liste des participants, puis envoie-le par WhatsApp ou SMS.
+          Rien à toucher dans le Sheet.</li>
         <li><strong>Faute de frappe dans une adresse</strong> : corrige la colonne A,
           puis « Renvoyer son lien ».</li>
         <li><strong>Retirer quelqu'un du jeu</strong> : supprime sa ligne entière dans
@@ -97,12 +98,42 @@
   <section id="s-gens" class="hidden">
     <h2>Les participants</h2>
     <p class="sub">En haut, ceux qui ont commencé sans valider : une petite
-      relance leur fera du bien. Tu peux aussi corriger un pseudo illisible,
-      la personne le verra à sa prochaine visite.</p>
+      relance leur fera du bien. Ceux qui n'ont pas encore commencé n'ont
+      peut-être jamais vu le mail (spam) : « Copier son lien » te permet de le
+      leur envoyer par WhatsApp ou SMS. Tu peux aussi corriger un pseudo
+      illisible, la personne le verra à sa prochaine visite.</p>
     <p class="note" id="gens-resume"></p>
     <button class="link" id="btn-actualiser">Actualiser</button>
     <div id="gens"></div>
     <p class="note" id="gens-msg"></p>
+  </section>
+
+  <!-- relances -->
+  <section id="s-relances" class="hidden">
+    <h2>Les relances</h2>
+    <p class="sub">Un mail personnel, avec le lien de chacun. Commence par
+      l'aperçu : il part à toi seul. Les parents ne sont jamais relancés, et
+      personne ne reçoit deux fois la même relance le même jour.</p>
+
+    <div class="relance">
+      <label class="q">Les pronostics</label>
+      <p class="note" id="rel-pronos-info"></p>
+      <div class="actions">
+        <button class="cta ghost" data-type="pronos" data-test="1">M'envoyer un aperçu</button>
+        <button class="cta" data-type="pronos" id="rel-pronos-go">Relancer</button>
+      </div>
+      <p class="note" id="rel-pronos-msg"></p>
+    </div>
+
+    <div class="relance" style="margin-top:26px">
+      <label class="q">Le livre d'or</label>
+      <p class="note" id="rel-mots-info"></p>
+      <div class="actions">
+        <button class="cta ghost" data-type="mots" data-test="1">M'envoyer un aperçu</button>
+        <button class="cta" data-type="mots" id="rel-mots-go">Relancer</button>
+      </div>
+      <p class="note" id="rel-mots-msg"></p>
+    </div>
   </section>
 
   <!-- messages -->

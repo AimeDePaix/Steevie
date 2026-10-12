@@ -41,14 +41,15 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-messages', 's-photos', 's-envoi', 's-reset']
+      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-relances', 's-messages', 's-photos', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
       // Les messages d'une action précédente n'ont plus lieu d'être.
-      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg'].forEach(function (i) { $(i).textContent = ''; });
+      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg', 'rel-pronos-msg', 'rel-mots-msg'].forEach(function (i) { $(i).textContent = ''; });
       $('bilan').innerHTML = '';
       dessinerEtat();
       dessinerChamps();
       dessinerGens();
+      dessinerRelances();
       dessinerMessages();
       dessinerPhotos();
     })
@@ -99,7 +100,7 @@ function bloc(v, t) {
 /* Où en est chacun : 0 en cours, 1 pas commencé, 2 validé (ordre d'affichage). */
 var ETAPES = { regles: 'lit les règles', indices: 'fait le quiz', pronos: 'remplit son formulaire' };
 function statut(g) {
-  if (g.valide) return { rang: 2, cls: 'st-ok', txt: 'validé' };
+  if (g.valide) return { rang: 2, cls: 'st-ok', txt: 'validé' + (g.appareil ? ' sur ' + g.appareil : '') };
   if (g.progression) return { rang: 0, cls: 'st-cours', txt: 'en cours : ' + (ETAPES[g.progression] || g.progression) };
   if (g.pseudo) return { rang: 0, cls: 'st-cours', txt: 'en cours : pseudo choisi' };
   return { rang: 1, cls: 'st-rien', txt: 'pas encore commencé' };
@@ -111,8 +112,10 @@ function dessinerGens() {
 
   var n = [0, 0, 0];
   gens.forEach(function (g) { n[g.st.rang]++; });
+  var spams = gens.filter(function (g) { return g.spam; }).length;
   $('gens-resume').textContent = gens.length
     ? n[2] + ' validé' + (n[2] > 1 ? 's' : '') + ' · ' + n[0] + ' en cours · ' + n[1] + ' pas commencé' + (n[1] > 1 ? 's' : '')
+      + (spams ? ' · ' + spams + ' en spam' : '')
     : '';
 
   $('gens').innerHTML = gens.map(function (g) {
@@ -120,12 +123,31 @@ function dessinerGens() {
       + '<div class="gens-id"><strong>' + echappe(g.nom) + '</strong>'
       +   '<em class="statut ' + g.st.cls + '">' + echappe(g.st.txt) + '</em>'
       +   '<span>' + echappe(g.email) + (g.invite ? ' · invité le ' + echappe(g.invite) : '') + '</span>'
-      +   '<button class="link relancer" data-t="' + echappe(g.token) + '">Renvoyer son lien</button></div>'
+      +   '<span class="gens-actions"><button class="link copier" data-t="' + echappe(g.token) + '">Copier son lien</button>'
+      +   '<button class="link relancer" data-t="' + echappe(g.token) + '">Renvoyer par mail</button>'
+      +   '<button class="link spam' + (g.spam ? ' actif' : '') + '" data-t="' + echappe(g.token) + '">'
+      +     (g.spam ? 'Reçu en spam ✓' : 'Noter : spam') + '</button></span></div>'
       + '<input type="text" maxlength="14" value="' + echappe(g.pseudo || '') + '" data-t="'
       +   echappe(g.token) + '" placeholder="sans pseudo">'
       + '<button class="cadeau-btn ok-pseudo" data-t="' + echappe(g.token) + '">OK</button>'
       + '</div>';
   }).join('') || '<p class="sub">Personne n\'est encore invité.</p>';
+
+  document.querySelectorAll('#gens .spam').forEach(function (b) {
+    b.onclick = function () {
+      var g = (ETAT.gens || []).filter(function (x) { return x.token === b.dataset.t; })[0];
+      if (!g) return;
+      b.disabled = true;
+      poster({ action: 'admin_spam', token: g.token, oui: !g.spam }, function (d) {
+        g.spam = d.spam;
+        dessinerGens();
+      });
+    };
+  });
+
+  document.querySelectorAll('#gens .copier').forEach(function (b) {
+    b.onclick = function () { copierLien(b); };
+  });
 
   document.querySelectorAll('#gens .relancer').forEach(function (b) {
     b.onclick = function () {
@@ -417,4 +439,83 @@ function echappe(t) {
   return String(t == null ? '' : t)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+
+/* ============================================================================
+   Les relances
+   ============================================================================ */
+
+function dessinerRelances() {
+  var r = ETAT.relances || { pronos: { n: 0 }, mots: { n: 0 } };
+  var pl = function (n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); };
+
+  $('rel-pronos-info').textContent = !r.ouvert
+    ? 'Les paris sont fermés : plus de relance possible.'
+    : pl(r.pronos.n, 'invité') + ' sans pronostic validé.'
+      + (r.pronos.derniere ? ' Dernière relance le ' + r.pronos.derniere + '.' : '');
+  $('rel-mots-info').textContent = pl(r.mots.n, 'joueur') + ' sans aucun mot au livre d\'or.'
+    + (r.mots.derniere ? ' Dernière relance le ' + r.mots.derniere + '.' : '');
+
+  $('rel-pronos-go').textContent = 'Relancer ' + pl(r.pronos.n, 'personne');
+  $('rel-mots-go').textContent = 'Relancer ' + pl(r.mots.n, 'personne');
+  $('rel-pronos-go').disabled = !r.ouvert || !r.pronos.n;
+  $('rel-mots-go').disabled = !r.mots.n;
+
+  document.querySelectorAll('#s-relances button[data-type]').forEach(function (b) {
+    b.onclick = function () {
+      var type = b.dataset.type, test = !!b.dataset.test;
+      var n = (r[type] || {}).n || 0;
+      if (!test && !confirm('Envoyer la relance à ' + pl(n, 'personne') + ' ?')) return;
+      var msg = $('rel-' + type + '-msg');
+      msg.textContent = 'Envoi…';
+      b.disabled = true;
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'admin_relance', type: type, test: test, k: CLE })
+      })
+        .then(function (x) { return x.json(); })
+        .then(function (d) {
+          b.disabled = false;
+          msg.textContent = d.ok ? d.message : d.error;
+          if (!test && d.ok) {
+            // On rafraîchit les compteurs sans effacer le message.
+            fetch(API + '?action=admin_etat&k=' + encodeURIComponent(CLE))
+              .then(function (x) { return x.json(); })
+              .then(function (e) {
+                if (!e.ok) return;
+                ETAT.relances = e.relances; ETAT.gens = e.gens;
+                dessinerRelances(); dessinerGens();
+                $('rel-' + type + '-msg').textContent = d.message;
+              });
+          }
+        })
+        .catch(function () { b.disabled = false; msg.textContent = 'Connexion impossible.'; });
+    };
+  });
+}
+
+
+/* Le lien personnel de quelqu'un, à coller dans WhatsApp ou un SMS quand le
+   mail est parti en spam. */
+function lienDe(token) {
+  return location.origin + location.pathname.replace(/admin\.html$/, '') + '?t=' + encodeURIComponent(token);
+}
+
+function copierLien(b) {
+  var lien = lienDe(b.dataset.t);
+  var fini = function () {
+    b.textContent = 'Lien copié ✓';
+    $('gens-msg').textContent = 'Copié : ' + lien + ' — colle-le dans WhatsApp ou un SMS.';
+    setTimeout(function () { b.textContent = 'Copier son lien'; }, 2500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(lien).then(fini, function () { montrerLien(lien); });
+  } else montrerLien(lien);
+}
+
+function montrerLien(lien) {
+  $('gens-msg').innerHTML = 'Copie ce lien à la main : <input type="text" readonly value="'
+    + echappe(lien) + '" onclick="this.select()" style="margin-top:6px">';
 }

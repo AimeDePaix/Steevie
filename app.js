@@ -827,7 +827,7 @@ $('btn-save').onclick = function () {
   $('btn-save').disabled = true;
   $('btn-save').textContent = '…';
 
-  envoyer({ action: 'prono', reponses: R, mises: MISES })
+  envoyer({ action: 'prono', reponses: R, mises: MISES, appareil: typeAppareil() })
     .then(function (d) {
       $('btn-save').disabled = false;
       $('btn-save').textContent = 'Valider';
@@ -931,4 +931,13 @@ var MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
 function courteDate(iso) {
   var p = String(iso).split('-'), j = Number(p[2]);
   return (j === 1 ? '1er' : j) + ' ' + MOIS_COURTS[Number(p[1]) - 1];
+}
+
+
+/* Téléphone, tablette ou ordinateur : juste le type, rien d'autre. */
+function typeAppareil() {
+  var ua = navigator.userAgent || '';
+  if (/iPad|Tablet/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'tablette';
+  if (/Mobi|Android|iPhone|iPod/i.test(ua)) return 'téléphone';
+  return 'ordinateur';
 }
