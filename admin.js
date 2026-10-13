@@ -41,7 +41,7 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-relances', 's-messages', 's-photos', 's-envoi', 's-reset']
+      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-tendances', 's-relances', 's-messages', 's-photos', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
       // Les messages d'une action précédente n'ont plus lieu d'être.
       ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg', 'rel-pronos-msg', 'rel-mots-msg'].forEach(function (i) { $(i).textContent = ''; });
@@ -100,39 +100,77 @@ function bloc(v, t) {
 /* Où en est chacun : 0 en cours, 1 pas commencé, 2 validé (ordre d'affichage). */
 var ETAPES = { regles: 'lit les règles', indices: 'fait le quiz', pronos: 'remplit son formulaire' };
 function statut(g) {
-  if (g.valide) return { rang: 2, cls: 'st-ok', txt: 'validé' + (g.appareil ? ' sur ' + g.appareil : '') };
+  if (g.valide) return { rang: 2, cls: 'st-ok', txt: 'validé'
+    + (g.fois > 1 ? ' ' + g.fois + ' fois' : ' une fois')
+    + (g.appareil ? ', sur ' + g.appareil : '') };
   if (g.progression) return { rang: 0, cls: 'st-cours', txt: 'en cours : ' + (ETAPES[g.progression] || g.progression) };
   if (g.pseudo) return { rang: 0, cls: 'st-cours', txt: 'en cours : pseudo choisi' };
   return { rang: 1, cls: 'st-rien', txt: 'pas encore commencé' };
 }
 
+var FILTRE_GENS = 'tous', CHERCHE_GENS = '';
+
 function dessinerGens() {
   var gens = (ETAT.gens || []).map(function (g) { g.st = statut(g); return g; })
     .sort(function (a, b) { return a.st.rang - b.st.rang || String(a.nom).localeCompare(String(b.nom)); });
 
-  var n = [0, 0, 0];
-  gens.forEach(function (g) { n[g.st.rang]++; });
-  var spams = gens.filter(function (g) { return g.spam; }).length;
-  $('gens-resume').textContent = gens.length
-    ? n[2] + ' validé' + (n[2] > 1 ? 's' : '') + ' · ' + n[0] + ' en cours · ' + n[1] + ' pas commencé' + (n[1] > 1 ? 's' : '')
-      + (spams ? ' · ' + spams + ' en spam' : '')
-    : '';
+  // Les filtres, avec leurs compteurs.
+  var FILTRES = [
+    ['tous', 'Tous', function () { return true; }],
+    ['cours', 'En cours', function (g) { return g.st.rang === 0; }],
+    ['rien', 'Pas commencé', function (g) { return g.st.rang === 1; }],
+    ['ok', 'Validé', function (g) { return g.st.rang === 2; }],
+    ['sansmot', 'Validé sans mot', function (g) { return g.st.rang === 2 && !g.mots; }],
+    ['spam', 'Spam', function (g) { return g.spam; }]
+  ];
+  $('gens-filtres').innerHTML = FILTRES.map(function (f) {
+    return '<button class="chip plat" data-f="' + f[0] + '"' + (FILTRE_GENS === f[0] ? ' aria-pressed="true"' : '')
+      + '>' + f[1] + ' <small>' + gens.filter(f[2]).length + '</small></button>';
+  }).join('');
+  document.querySelectorAll('#gens-filtres .chip').forEach(function (b) {
+    b.onclick = function () { FILTRE_GENS = b.dataset.f; dessinerGens(); };
+  });
+  $('gens-cherche').value = CHERCHE_GENS;
+  $('gens-cherche').oninput = function () { CHERCHE_GENS = this.value; dessinerLignes(); };
 
-  $('gens').innerHTML = gens.map(function (g) {
-    return '<div class="ligne-gens">'
-      + '<div class="gens-id"><strong>' + echappe(g.nom) + '</strong>'
-      +   '<em class="statut ' + g.st.cls + '">' + echappe(g.st.txt) + '</em>'
-      +   '<span>' + echappe(g.email) + (g.invite ? ' · invité le ' + echappe(g.invite) : '') + '</span>'
-      +   '<span class="gens-actions"><button class="link copier" data-t="' + echappe(g.token) + '">Copier son lien</button>'
-      +   '<button class="link relancer" data-t="' + echappe(g.token) + '">Renvoyer par mail</button>'
-      +   '<button class="link spam' + (g.spam ? ' actif' : '') + '" data-t="' + echappe(g.token) + '">'
-      +     (g.spam ? 'Reçu en spam ✓' : 'Noter : spam') + '</button></span></div>'
-      + '<input type="text" maxlength="14" value="' + echappe(g.pseudo || '') + '" data-t="'
-      +   echappe(g.token) + '" placeholder="sans pseudo">'
-      + '<button class="cadeau-btn ok-pseudo" data-t="' + echappe(g.token) + '">OK</button>'
-      + '</div>';
-  }).join('') || '<p class="sub">Personne n\'est encore invité.</p>';
+  var garde = FILTRES.filter(function (f) { return f[0] === FILTRE_GENS; })[0][2];
 
+  function dessinerLignes() {
+    var q = CHERCHE_GENS.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    var vus = gens.filter(garde).filter(function (g) {
+      if (!q) return true;
+      return [g.nom, g.email, g.pseudo].join(' ').toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '').indexOf(q) !== -1;
+    });
+
+    $('gens').innerHTML = vus.length ? '<table class="gens"><thead><tr>'
+      + '<th>Qui</th><th>Où il en est</th><th class="c">Valid.</th><th>Appareil</th>'
+      + '<th class="c">Mots</th><th>Pseudo</th><th>Actions</th></tr></thead><tbody>'
+      + vus.map(function (g) {
+          var t = echappe(g.token);
+          var etat = g.st.rang === 2 ? 'validé' : g.st.txt.replace(/^en cours : /, '');
+          return '<tr class="' + g.st.cls + (g.spam ? ' en-spam' : '') + '">'
+            + '<td class="qui"><strong>' + echappe(g.nom) + '</strong>'
+            +   '<span>' + echappe(g.email) + (g.invite ? ' · ' + echappe(g.invite) : '') + '</span></td>'
+            + '<td class="etat"><i class="puce"></i>' + echappe(etat) + '</td>'
+            + '<td class="c num">' + (g.fois || '—') + '</td>'
+            + '<td class="num">' + echappe(g.appareil || '—') + '</td>'
+            + '<td class="c num">' + (g.mots ? g.mots + '/2' : '—') + '</td>'
+            + '<td class="pseudo-cell"><input type="text" maxlength="14" value="' + echappe(g.pseudo || '')
+            +   '" data-t="' + t + '" placeholder="—"><button class="mini-btn ok-pseudo" data-t="' + t + '" title="Enregistrer le pseudo">OK</button></td>'
+            + '<td class="acts"><button class="mini-btn copier" data-t="' + t + '" title="Copier son lien, pour WhatsApp ou SMS">Lien</button>'
+            +   '<button class="mini-btn relancer" data-t="' + t + '" title="Lui renvoyer son lien par mail">Mail</button>'
+            +   '<button class="mini-btn spam' + (g.spam ? ' actif' : '') + '" data-t="' + t + '" title="Noter qu\'il a reçu le mail en spam">'
+            +     (g.spam ? 'Spam ✓' : 'Spam') + '</button></td>'
+            + '</tr>';
+        }).join('') + '</tbody></table>'
+      : '<p class="sub" style="padding:14px 0">Personne dans cette sélection.</p>';
+    brancherGens();
+  }
+  dessinerLignes();
+}
+
+function brancherGens() {
   document.querySelectorAll('#gens .spam').forEach(function (b) {
     b.onclick = function () {
       var g = (ETAT.gens || []).filter(function (x) { return x.token === b.dataset.t; })[0];
@@ -153,7 +191,7 @@ function dessinerGens() {
     b.onclick = function () {
       b.disabled = true;
       poster({ action: 'admin_relancer', token: b.dataset.t }, function (d) {
-        b.textContent = 'Lien renvoyé ✓';
+        b.textContent = 'Envoyé ✓';
         $('gens-msg').textContent = d.message;
       });
     };
@@ -162,8 +200,11 @@ function dessinerGens() {
   document.querySelectorAll('#gens .ok-pseudo').forEach(function (b) {
     b.onclick = function () {
       var champ = document.querySelector('#gens input[data-t="' + b.dataset.t + '"]');
-      poster({ action: 'admin_pseudo', token: b.dataset.t, pseudo: champ.value },
-        function () { b.textContent = '✓'; setTimeout(function () { b.textContent = 'OK'; }, 1500); });
+      poster({ action: 'admin_pseudo', token: b.dataset.t, pseudo: champ.value }, function (d) {
+        var g = (ETAT.gens || []).filter(function (x) { return x.token === b.dataset.t; })[0];
+        if (g) g.pseudo = d.pseudo;
+        b.textContent = '✓'; setTimeout(function () { b.textContent = 'OK'; }, 1500);
+      });
     };
   });
 }
@@ -506,9 +547,9 @@ function lienDe(token) {
 function copierLien(b) {
   var lien = lienDe(b.dataset.t);
   var fini = function () {
-    b.textContent = 'Lien copié ✓';
+    b.textContent = 'Copié ✓';
     $('gens-msg').textContent = 'Copié : ' + lien + ' — colle-le dans WhatsApp ou un SMS.';
-    setTimeout(function () { b.textContent = 'Copier son lien'; }, 2500);
+    setTimeout(function () { b.textContent = 'Lien'; }, 2500);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(lien).then(fini, function () { montrerLien(lien); });
@@ -519,3 +560,32 @@ function montrerLien(lien) {
   $('gens-msg').innerHTML = 'Copie ce lien à la main : <input type="text" readonly value="'
     + echappe(lien) + '" onclick="this.select()" style="margin-top:6px">';
 }
+
+
+/* ============================================================================
+   Les tendances
+   ============================================================================ */
+
+$('btn-tendances').onclick = function () {
+  $('btn-tendances').disabled = true;
+  $('tendances-sub').textContent = 'Calcul…';
+  fetch(API + '?action=admin_tendances&k=' + encodeURIComponent(CLE))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      $('btn-tendances').disabled = false;
+      $('btn-tendances').textContent = 'Actualiser les tendances';
+      if (!d.ok) { $('tendances-sub').textContent = d.error; return; }
+      $('tendances-sub').textContent = d.joueurs + ' joueur' + (d.joueurs > 1 ? 's' : '')
+        + ' pris en compte (dernière version de chaque pronostic).';
+      $('tendances').innerHTML = d.questions.map(function (q) {
+        return '<h3 class="sstitre">' + echappe(q.nom.charAt(0).toUpperCase() + q.nom.slice(1))
+          + ' <small class="mini-note">· ' + q.miseMoyenne + ' jetons misés en moyenne</small></h3>'
+          + q.reponses.map(function (r) {
+              return '<div class="bar"><span class="lab">' + echappe(r.libelle) + '</span>'
+                + '<span class="track"><span class="fill" style="width:' + r.pct + '%"></span></span>'
+                + '<span class="n" style="flex-basis:64px">' + r.pct + ' % (' + r.n + ')</span></div>';
+            }).join('');
+      }).join('');
+    })
+    .catch(function () { $('btn-tendances').disabled = false; $('tendances-sub').textContent = 'Connexion impossible.'; });
+};

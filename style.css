@@ -959,3 +959,39 @@ details.aide li { margin-bottom: 8px; }
 details.aide code { font: 400 13px var(--mono); }
 
 .gens-id .spam.actif { color: #9A5B00; font-weight: 600; text-decoration: none; }
+
+
+/* ============================================================================
+   Console : le tableau des participants, une ligne par personne
+   ============================================================================ */
+section.large { width: min(1120px, calc(100vw - 32px)); position: relative; left: 50%; transform: translateX(-50%); }
+.gens-outils { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 6px 0 14px; }
+.gens-outils .chips { margin: 0; }
+.gens-outils .chip small { font: 400 11px var(--mono); opacity: .65; margin-left: 2px; }
+.gens-outils input[type=search] { flex: 1 1 240px; max-width: 340px; padding: 9px 12px; font-size: 14px; }
+.tableau-gens { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.gens { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 14px; }
+table.gens th { text-align: left; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-soft); padding: 0 10px 9px 0; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+table.gens td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+table.gens tbody tr:hover td { background: rgba(23, 37, 31, .035); }
+table.gens .c { text-align: center; }
+table.gens td.num { font: 400 13px var(--mono); color: var(--ink-soft); white-space: nowrap; }
+table.gens td.qui strong { display: block; font-size: 14.5px; font-weight: 600; }
+table.gens td.qui span { font: 400 11.5px/1.3 var(--mono); color: var(--ink-soft); }
+table.gens td.etat { white-space: nowrap; font-size: 13.5px; }
+table.gens .puce { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px;
+  background: var(--rule); vertical-align: 1px; }
+table.gens tr.st-cours td.etat { color: #9A5B00; font-weight: 600; }
+table.gens tr.st-cours .puce { background: #D9A31E; }
+table.gens tr.st-ok .puce { background: #2F6B4E; }
+table.gens tr.st-rien td.etat { color: var(--ink-soft); font-style: italic; }
+table.gens td.pseudo-cell { white-space: nowrap; }
+table.gens td.pseudo-cell input { width: 120px; padding: 6px 8px; font-size: 13.5px; display: inline-block; vertical-align: middle; }
+table.gens td.acts { white-space: nowrap; }
+.mini-btn { padding: 6px 9px; margin-left: 4px; border: 1px solid var(--rule); border-radius: 3px; background: var(--card);
+  font: 500 12.5px/1 var(--body); color: var(--ink); cursor: pointer; vertical-align: middle; }
+.mini-btn:hover { border-color: var(--ink); }
+.mini-btn:disabled { opacity: .5; cursor: default; }
+.mini-btn.spam.actif { background: #FBF2D8; border-color: #D9A31E; color: #9A5B00; }
+table.gens tr.en-spam td.qui strong::after { content: ' · spam'; font: 500 11px var(--mono); color: #9A5B00; }

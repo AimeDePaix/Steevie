@@ -57,8 +57,8 @@
         <li><strong>Ne modifie jamais la colonne C (token)</strong> d'une personne qui
           a déjà reçu son lien : son lien cesserait de marcher et elle perdrait
           ses pronos.</li>
-        <li><strong>Quelqu'un a perdu son mail, ou l'a reçu en spam</strong> : « Copier son
-          lien » dans la liste des participants, puis envoie-le par WhatsApp ou SMS.
+        <li><strong>Quelqu'un a perdu son mail, ou l'a reçu en spam</strong> : « Lien » dans la
+          liste des participants, puis envoie-le par WhatsApp ou SMS.
           Rien à toucher dans le Sheet.</li>
         <li><strong>Faute de frappe dans une adresse</strong> : corrige la colonne A,
           puis « Renvoyer son lien ».</li>
@@ -95,17 +95,30 @@
   </section>
 
   <!-- pseudos -->
-  <section id="s-gens" class="hidden">
+  <section id="s-gens" class="hidden large">
     <h2>Les participants</h2>
-    <p class="sub">En haut, ceux qui ont commencé sans valider : une petite
-      relance leur fera du bien. Ceux qui n'ont pas encore commencé n'ont
-      peut-être jamais vu le mail (spam) : « Copier son lien » te permet de le
-      leur envoyer par WhatsApp ou SMS. Tu peux aussi corriger un pseudo
-      illisible, la personne le verra à sa prochaine visite.</p>
-    <p class="note" id="gens-resume"></p>
-    <button class="link" id="btn-actualiser">Actualiser</button>
-    <div id="gens"></div>
+    <p class="sub">Ceux qui ont commencé sans valider sont en haut. « Lien » copie
+      le lien personnel, à envoyer par WhatsApp ou SMS (pratique si le mail est
+      parti en spam) ; « Mail » le renvoie par mail ; « Spam » te sert de
+      pense-bête. Un pseudo corrigé s'enregistre avec OK.</p>
+    <div class="gens-outils">
+      <div class="chips" id="gens-filtres"></div>
+      <input type="search" id="gens-cherche" placeholder="Chercher un nom, une adresse, un pseudo">
+      <button class="link" id="btn-actualiser">Actualiser</button>
+    </div>
+    <div class="tableau-gens"><div id="gens"></div></div>
     <p class="note" id="gens-msg"></p>
+  </section>
+
+  <!-- tendances -->
+  <section id="s-tendances" class="hidden">
+    <h2>Les tendances</h2>
+    <p class="sub">Ce que les joueurs ont parié jusqu'ici, question par question,
+      sans les parents. Simple lecture : ça ne ferme rien et ça ne calcule aucun
+      classement.</p>
+    <button class="cta ghost" id="btn-tendances">Voir les tendances</button>
+    <p class="note" id="tendances-sub"></p>
+    <div id="tendances"></div>
   </section>
 
   <!-- relances -->
