@@ -124,28 +124,52 @@
   <!-- relances -->
   <section id="s-relances" class="hidden">
     <h2>Les relances</h2>
-    <p class="sub">Un mail personnel, avec le lien de chacun. Commence par
-      l'aperçu : il part à toi seul. Les parents ne sont jamais relancés, et
-      personne ne reçoit deux fois la même relance le même jour.</p>
+    <p class="sub">Un mail personnel par groupe, avec le lien de chacun. Commence
+      toujours par l'aperçu : il part à toi seul. Les parents ne sont jamais
+      relancés, et personne ne reçoit deux fois la même relance le même jour.</p>
 
-    <div class="relance">
-      <label class="q">Les pronostics</label>
-      <p class="note" id="rel-pronos-info"></p>
+    <div class="relance" style="margin-top:22px">
+      <label class="q">Les nullos</label>
+      <p class="note" style="margin:2px 0 4px">Ni pseudo, ni rien : lien jamais ouvert, ou ouvert sans aller plus loin que le mot d'accueil.</p>
+      <p class="note" id="rel-rien-info"></p>
       <div class="actions">
-        <button class="cta ghost" data-type="pronos" data-test="1">M'envoyer un aperçu</button>
-        <button class="cta" data-type="pronos" id="rel-pronos-go">Relancer</button>
+        <button class="cta ghost" data-type="rien" data-test="1">M'envoyer un aperçu</button>
+        <button class="cta" data-type="rien" id="rel-rien-go">Relancer</button>
       </div>
-      <p class="note" id="rel-pronos-msg"></p>
+      <p class="note" id="rel-rien-msg"></p>
     </div>
 
-    <div class="relance" style="margin-top:26px">
-      <label class="q">Le livre d'or</label>
-      <p class="note" id="rel-mots-info"></p>
+    <div class="relance" style="margin-top:22px">
+      <label class="q">Les volontaires distraits</label>
+      <p class="note" style="margin:2px 0 4px">Ont commencé (pseudo, règles, quiz ou formulaire) sans valider leurs pronostics.</p>
+      <p class="note" id="rel-cours-info"></p>
       <div class="actions">
-        <button class="cta ghost" data-type="mots" data-test="1">M'envoyer un aperçu</button>
-        <button class="cta" data-type="mots" id="rel-mots-go">Relancer</button>
+        <button class="cta ghost" data-type="cours" data-test="1">M'envoyer un aperçu</button>
+        <button class="cta" data-type="cours" id="rel-cours-go">Relancer</button>
       </div>
-      <p class="note" id="rel-mots-msg"></p>
+      <p class="note" id="rel-cours-msg"></p>
+    </div>
+
+    <div class="relance" style="margin-top:22px">
+      <label class="q">Les parieurs muets</label>
+      <p class="note" style="margin:2px 0 4px">Ont validé leurs pronostics, mais aucun mot au livre d'or.</p>
+      <p class="note" id="rel-mots0-info"></p>
+      <div class="actions">
+        <button class="cta ghost" data-type="mots0" data-test="1">M'envoyer un aperçu</button>
+        <button class="cta" data-type="mots0" id="rel-mots0-go">Relancer</button>
+      </div>
+      <p class="note" id="rel-mots0-msg"></p>
+    </div>
+
+    <div class="relance" style="margin-top:22px">
+      <label class="q">Les parieurs à moitié bavards</label>
+      <p class="note" style="margin:2px 0 4px">Ont validé et écrit un seul des deux mots. Le mail dit lequel manque.</p>
+      <p class="note" id="rel-mots1-info"></p>
+      <div class="actions">
+        <button class="cta ghost" data-type="mots1" data-test="1">M'envoyer un aperçu</button>
+        <button class="cta" data-type="mots1" id="rel-mots1-go">Relancer</button>
+      </div>
+      <p class="note" id="rel-mots1-msg"></p>
     </div>
   </section>
 

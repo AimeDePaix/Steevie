@@ -44,7 +44,7 @@ function entrer() {
       ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-tendances', 's-relances', 's-messages', 's-photos', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
       // Les messages d'une action précédente n'ont plus lieu d'être.
-      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg', 'rel-pronos-msg', 'rel-mots-msg'].forEach(function (i) { $(i).textContent = ''; });
+      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg', 'rel-rien-msg', 'rel-cours-msg', 'rel-mots0-msg', 'rel-mots1-msg'].forEach(function (i) { $(i).textContent = ''; });
       $('bilan').innerHTML = '';
       dessinerEtat();
       dessinerChamps();
@@ -488,20 +488,17 @@ function echappe(t) {
    ============================================================================ */
 
 function dessinerRelances() {
-  var r = ETAT.relances || { pronos: { n: 0 }, mots: { n: 0 } };
+  var r = ETAT.relances || {};
   var pl = function (n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); };
-
-  $('rel-pronos-info').textContent = !r.ouvert
-    ? 'Les paris sont fermés : plus de relance possible.'
-    : pl(r.pronos.n, 'invité') + ' sans pronostic validé.'
-      + (r.pronos.derniere ? ' Dernière relance le ' + r.pronos.derniere + '.' : '');
-  $('rel-mots-info').textContent = pl(r.mots.n, 'joueur') + ' sans aucun mot au livre d\'or.'
-    + (r.mots.derniere ? ' Dernière relance le ' + r.mots.derniere + '.' : '');
-
-  $('rel-pronos-go').textContent = 'Relancer ' + pl(r.pronos.n, 'personne');
-  $('rel-mots-go').textContent = 'Relancer ' + pl(r.mots.n, 'personne');
-  $('rel-pronos-go').disabled = !r.ouvert || !r.pronos.n;
-  $('rel-mots-go').disabled = !r.mots.n;
+  ['rien', 'cours', 'mots0', 'mots1'].forEach(function (k) {
+    var x = r[k] || { n: 0 };
+    var pronos = (k === 'rien' || k === 'cours');
+    $('rel-' + k + '-info').textContent = (pronos && !r.ouvert)
+      ? 'Les paris sont fermés : plus de relance possible.'
+      : pl(x.n, 'personne') + ' dans ce groupe.' + (x.derniere ? ' Dernière relance le ' + x.derniere + '.' : '');
+    $('rel-' + k + '-go').textContent = 'Relancer ' + pl(x.n, 'personne');
+    $('rel-' + k + '-go').disabled = !x.n || (pronos && !r.ouvert);
+  });
 
   document.querySelectorAll('#s-relances button[data-type]').forEach(function (b) {
     b.onclick = function () {
