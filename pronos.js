@@ -35,11 +35,10 @@ function afficher(d) {
 
   show('s-table', true);
   $('table-sub').textContent = d.phase === 'closed'
-    ? 'Les paris sont fermés : ' + d.entries.filter(function (e) { return !e.parent; }).length
-      + ' joueurs, plus rien ne bouge jusqu\'à la naissance.'
+    ? 'Les paris sont fermés : ' + d.entries.length + ' joueurs, plus rien ne bouge jusqu\'à la naissance.'
     : d.entries.length + ' participant' + (d.entries.length > 1 ? 's' : '') + ' ont déjà joué.';
 
-  if (d.phase !== 'open') tendance(d.entries);   // l'en-tête n'apparaît qu'une fois les paris fermés
+  if (d.phase !== 'open' && d.tendance) tendance(d.tendance);   // seulement une fois les paris fermés
   tableau(d.entries, d.phase === 'revealed');
 
   if (d.phase === 'revealed' && d.resultat) resultat(d);
@@ -137,33 +136,26 @@ function courteDate(iso) {
 
 
 
-/* L'en-tête du tableau : fille ou garçon en pourcentage, et un fun fact sur
-   le jour du terme. Seuls les joueurs comptent, jamais les parents. */
-function tendance(entries) {
-  var joueurs = entries.filter(function (e) { return !e.parent && e.reponses && e.reponses.sexe; });
-  var n = joueurs.length;
-  if (!n) return;
-  var f = joueurs.filter(function (e) { return e.reponses.sexe === 'F'; }).length;
-  var pf = Math.round(f / n * 100), pg = 100 - pf;
+/* L'en-tête du tableau, une fois les paris fermés : fille ou garçon en
+   pourcentage, et un fun fact sur le jour du terme. Les totaux viennent du
+   serveur et comptent tout le monde, parents compris, sans rien dévoiler de
+   leurs réponses. */
+function tendance(t) {
+  if (!t || !t.n) return;
+  var pf = t.pctFille, pg = 100 - pf;
   $('tend-f').style.width = pf + '%';
   $('tend-g').style.width = pg + '%';
   $('tend-txt').innerHTML = '<span class="f">Fille ' + pf + ' %</span><span class="g">Garçon ' + pg + ' %</span>';
 
-  var terme = CFG.terme;
-  var auTerme = joueurs.filter(function (e) { return e.reponses.date === terme; }).length;
-  var jour = jourSemaine(terme) + ' ' + courteDateLongue(terme);
+  var jour = jourSemaine(CFG.terme) + ' ' + courteDateLongue(CFG.terme);
   var fun;
-  if (auTerme === 0) {
+  if (t.auTerme === 0) {
     fun = 'Personne n\'a misé sur le jour du terme, le ' + jour + '. Steevie, si tu nous lis : c\'est le moment de surprendre tout le monde.';
-  } else if (auTerme <= 2) {
-    fun = 'Le jour du terme, le ' + jour + ', n\'a été choisi que par ' + auTerme + ' joueur' + (auTerme > 1 ? 's' : '') + '.';
+  } else if (t.auTerme <= 2) {
+    fun = 'Le jour du terme, le ' + jour + ', n\'a été choisi que par ' + t.auTerme + ' joueur' + (t.auTerme > 1 ? 's' : '') + '.';
   } else {
-    // Sinon, le jour le plus joué.
-    var compte = {};
-    joueurs.forEach(function (e) { var d = e.reponses.date; if (d) compte[d] = (compte[d] || 0) + 1; });
-    var top = Object.keys(compte).sort(function (a, b) { return compte[b] - compte[a] || (a < b ? -1 : 1); })[0];
-    var lib = /^\d{4}-/.test(top) ? 'le ' + jourSemaine(top) + ' ' + courteDateLongue(top) : jourLisible(top);
-    fun = 'Le jour le plus joué : ' + lib + ', choisi par ' + compte[top] + ' joueurs.';
+    var lib = /^\d{4}-/.test(t.jour) ? 'le ' + jourSemaine(t.jour) + ' ' + courteDateLongue(t.jour) : jourLisible(t.jour);
+    fun = 'Le jour le plus joué : ' + lib + ', choisi par ' + t.jourN + ' joueurs.';
   }
   $('tend-fun').textContent = fun;
   show('tendance', true);
