@@ -38,6 +38,7 @@ var ETAPES = [
 ];
 
 var MISE_MINI = 5;
+var PARENT = false, MOTS = [];
 
 var $ = function (id) { return document.getElementById(id); };
 var show = function (id, on) { var e = $(id); if (e) e.classList.toggle('hidden', !on); };
@@ -59,6 +60,12 @@ if (!TOKEN) {
 
 function demarrer(d) {
   show('s-load', false);
+  // Paris fermés et rien validé : ce lien ne mène plus à rien.
+  if (!d.ok && d.error === 'jeu-clos') {
+    $('clos-txt').textContent = 'Les pronostics sont fermés depuis le ' + jolieDate(d.cloture) + ' au soir.';
+    show('s-clos', true);
+    return;
+  }
   if (!d.ok) { show('s-accueil', true); return; }
 
   document.title = 'Steevie — pronostics';
@@ -68,6 +75,11 @@ function demarrer(d) {
   CFG = d.config;
   PHASE = d.phase;
   MOI = { prenom: d.prenom, pseudo: d.pseudo || '' };
+  MOTS = d.mots || [];
+
+  // Version parents : même formulaire, mais une question peut rester à 0 jeton.
+  PARENT = !!d.parent;
+  if (PARENT) MISE_MINI = 0;
 
   $('hello').textContent = 'Bonjour ' + d.prenom;
   $('mes-papa').innerHTML = enKg(CFG.papa_poids) + ' · ' + CFG.papa_taille + ' cm<br>né à ' + CFG.papa_heure;
@@ -294,7 +306,10 @@ $('btn-quiz-suite').onclick = function () {
 
 function allerFormulaire() {
   if (PHASE !== 'open') return montrerFerme();
-  $('form-sub').innerHTML = 'Huit questions, ' + CFG.jetons + ' jetons. Tant que tu n\'as pas '
+  $('form-sub').innerHTML = (PARENT
+      ? '<strong>Version parents</strong> : pas de minimum, chaque question peut rester à 0 jeton. '
+      : '')
+    + 'Huit questions, ' + CFG.jetons + ' jetons. Tant que tu n\'as pas '
     + 'validé, tes réponses restent en brouillon sur cet appareil : tu peux fermer la '
     + 'page et revenir plus tard avec ton lien. Modifiable jusqu\'au '
     + jolieDate(CFG.cloture) + '.';
@@ -857,6 +872,7 @@ function montrerTicket(prono) {
   etape('s-ticket', 'ticket');
   dessinerTicket($('ticket-canvas'), CFG, MOI.pseudo, prono, QUESTIONS, RESULTAT);
   show('btn-edit', PHASE === 'open');
+  pageFermee();
 
   // Après la naissance, le ticket gagne une colonne « obtenu ». On va
   // chercher le résultat réel, puis on le redessine.
@@ -940,4 +956,29 @@ function typeAppareil() {
   if (/iPad|Tablet/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'tablette';
   if (/Mobi|Android|iPhone|iPod/i.test(ua)) return 'téléphone';
   return 'ordinateur';
+}
+
+
+/* Paris fermés, avant la naissance : le ticket devient la page d'accueil,
+   avec les lots et l'accès au reste du site. */
+function pageFermee() {
+  var ferme = PHASE === 'closed';
+  show('fin', ferme);
+  show('fin-suite', ferme);
+  show('merci', !ferme);
+  show('ticket-sub', !ferme);
+  $('ticket-titre').textContent = ferme ? 'Ton ticket' : 'Ticket récap Steevamax';
+  if (!ferme) return;
+  $('fin-lots').innerHTML = LOTS.map(function (l, i) {
+    var txt = String(CFG[l.cle] || l.defaut);
+    return '<div class="lot' + (i < 3 ? ' podium' : '') + '">'
+      + '<div class="lot-titre">' + l.titre + (l.pour ? '<span>' + l.pour + '</span>' : '') + '</div>'
+      + '<div class="lot-txt">' + txt.replace(/</g, '&lt;') + '</div></div>';
+  }).join('');
+  var q = '?t=' + encodeURIComponent(TOKEN);
+  $('fin-pronos').href = 'pronos.html' + q;
+  $('fin-liste').href = 'liste.html' + q;
+  $('fin-mots').href = 'mots.html' + q;
+  $('fin-mots').textContent = MOTS.length >= 2 ? 'Relire mes petits mots'
+    : MOTS.length === 1 ? 'Écrire mon second petit mot' : 'Un petit mot pour nous';
 }

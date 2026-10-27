@@ -22,6 +22,11 @@ fetch(API + '?action=mots&t=' + encodeURIComponent(TOKEN))
   .then(function (r) { return r.json(); })
   .then(function (d) {
     show('s-load', false);
+    if (!d.ok && d.error === 'jeu-clos') {
+      show('s-intro', true);
+      $('s-intro').innerHTML = '<p class="sub" style="margin:0">Les pronostics sont fermés.</p>';
+      return;
+    }
     if (!d.ok) {
       show('s-intro', true);
       $('s-intro').innerHTML = '<h2>Pas encore</h2><p class="sub">Cette page s\'ouvre '

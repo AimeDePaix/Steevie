@@ -41,15 +41,16 @@ function entrer() {
       }
       ETAT = d;
       show('s-cle', false);
-      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-tendances', 's-relances', 's-messages', 's-photos', 's-envoi', 's-reset']
+      ['s-etat', 's-inviter', 's-resultat', 's-bilan', 's-gens', 's-tendances', 's-fermeture', 's-relances', 's-messages', 's-photos', 's-envoi', 's-reset']
         .forEach(function (i) { show(i, true); });
       // Les messages d'une action précédente n'ont plus lieu d'être.
-      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg', 'rel-rien-msg', 'rel-cours-msg', 'rel-mots0-msg', 'rel-mots1-msg'].forEach(function (i) { $(i).textContent = ''; });
+      ['resultat-msg', 'photo-msg', 'envoi-msg', 'bilan-sub', 'gens-msg', 'ferm-msg', 'rel-rien-msg', 'rel-cours-msg', 'rel-mots0-msg', 'rel-mots1-msg'].forEach(function (i) { $(i).textContent = ''; });
       $('bilan').innerHTML = '';
       dessinerEtat();
       dessinerChamps();
       dessinerGens();
       dessinerRelances();
+      dessinerFermeture();
       dessinerMessages();
       dessinerPhotos();
     })
@@ -100,6 +101,8 @@ function bloc(v, t) {
 /* Où en est chacun : 0 en cours, 1 pas commencé, 2 validé (ordre d'affichage). */
 var ETAPES = { regles: 'lit les règles', indices: 'fait le quiz', pronos: 'remplit son formulaire' };
 function statut(g) {
+  // Paris fermés : qui n'a pas validé n'a pas joué, et ne jouera plus.
+  if (!g.valide && ETAT && ETAT.phase && ETAT.phase !== 'open') return { rang: 1, cls: 'st-rien', txt: 'n\'a pas joué' };
   if (g.valide) return { rang: 2, cls: 'st-ok', txt: 'validé'
     + (g.fois > 1 ? ' ' + g.fois + ' fois' : ' une fois')
     + (g.appareil ? ', sur ' + g.appareil : '') };
@@ -118,7 +121,7 @@ function dessinerGens() {
   var FILTRES = [
     ['tous', 'Tous', function () { return true; }],
     ['cours', 'En cours', function (g) { return g.st.rang === 0; }],
-    ['rien', 'Pas commencé', function (g) { return g.st.rang === 1; }],
+    ['rien', ETAT.phase !== 'open' ? 'N\'a pas joué' : 'Pas commencé', function (g) { return g.st.rang === 1; }],
     ['ok', 'Validé', function (g) { return g.st.rang === 2; }],
     ['sansmot', 'Validé sans mot', function (g) { return g.st.rang === 2 && !g.mots; }],
     ['spam', 'Spam', function (g) { return g.spam; }]
@@ -586,3 +589,45 @@ $('btn-tendances').onclick = function () {
     })
     .catch(function () { $('btn-tendances').disabled = false; $('tendances-sub').textContent = 'Connexion impossible.'; });
 };
+
+
+/* ============================================================================
+   Le mail de fermeture
+   ============================================================================ */
+
+function dessinerFermeture() {
+  var f = ETAT.fermeture || { ferme: false, n: 0, deja: 0 };
+  var reste = f.n - f.deja;
+  $('ferm-info').textContent = !f.ferme
+    ? 'Les paris sont encore ouverts : ce mail sera disponible après la fermeture.'
+    : f.n + ' joueurs · ' + f.deja + ' l\'ont déjà reçu'
+      + (f.derniere ? ' · dernier envoi le ' + f.derniere : '') + '.';
+  $('ferm-go').textContent = reste > 0 ? 'Envoyer aux ' + reste + ' joueurs' : 'Déjà envoyé à tous';
+  $('ferm-go').disabled = !f.ferme || reste <= 0;
+  $('ferm-test').disabled = !f.ferme || !f.n;
+
+  [['ferm-test', true], ['ferm-go', false]].forEach(function (x) {
+    $(x[0]).onclick = function () {
+      var test = x[1];
+      if (!test && !confirm('Envoyer le mail de fermeture à ' + reste + ' joueurs ?')) return;
+      $(x[0]).disabled = true;
+      $('ferm-msg').textContent = 'Envoi…';
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'admin_cloture', test: test, k: CLE })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          $(x[0]).disabled = false;
+          $('ferm-msg').textContent = d.ok ? d.message : d.error;
+          if (!test && d.ok) {
+            fetch(API + '?action=admin_etat&k=' + encodeURIComponent(CLE))
+              .then(function (r) { return r.json(); })
+              .then(function (e) { if (e.ok) { ETAT.fermeture = e.fermeture; dessinerFermeture(); $('ferm-msg').textContent = d.message; } });
+          }
+        })
+        .catch(function () { $(x[0]).disabled = false; $('ferm-msg').textContent = 'Connexion impossible.'; });
+    };
+  });
+}

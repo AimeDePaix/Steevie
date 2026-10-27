@@ -34,6 +34,11 @@
     <p class="note" id="resend-msg"></p>
   </section>
 
+  <!-- ====================================== paris fermés, lien d'un non-joueur -->
+  <section id="s-clos" class="hidden nue">
+    <p class="sub" id="clos-txt" style="margin:0">Les pronostics sont fermés.</p>
+  </section>
+
   <!-- ====================================== étape 1 : le mot des parents -->
   <section id="s-bienvenue" class="hidden">
     <p class="accroche">Qui est Steevie ?</p>
@@ -158,8 +163,13 @@
 
   <!-- ====================================== après validation : le ticket -->
   <section id="s-ticket" class="hidden">
-    <h2>Ticket récap Steevamax</h2>
-    <p class="sub">C'est enregistré. Voici ton bulletin, à partager si le cœur
+    <div class="fin hidden" id="fin">
+      <p class="accroche">Les jeux sont faits</p>
+      <p>Les paris sont fermés : plus rien ne bouge jusqu'à la naissance. Voici ton
+        ticket, tel qu'il comptera pour le classement.</p>
+    </div>
+    <h2 id="ticket-titre">Ticket récap Steevamax</h2>
+    <p class="sub" id="ticket-sub">C'est enregistré. Voici ton bulletin, à partager si le cœur
       t'en dit.</p>
     <canvas id="ticket-canvas"></canvas>
     <div class="actions">
@@ -167,7 +177,17 @@
       <button class="cta ghost" id="btn-edit">Modifier</button>
     </div>
 
-    <div class="merci">
+    <div class="fin-suite hidden" id="fin-suite">
+      <div class="lots">
+        <p class="lots-q">Ce qui est en jeu</p>
+        <div id="fin-lots"></div>
+      </div>
+      <a class="cta bloc" id="fin-pronos" href="#">Les pronos des autres</a>
+      <a class="cta bloc ghost" id="fin-mots" href="#">Un petit mot pour nous</a>
+      <a class="cta bloc ghost" id="fin-liste" href="#">La liste de naissance</a>
+    </div>
+
+    <div class="merci" id="merci">
       <p class="merci-titre">Merci d'avoir joué</p>
       <p>Tout le reste du site est maintenant ouvert : les pronostics des
         autres, un petit mot pour nous, et la liste de naissance.</p>

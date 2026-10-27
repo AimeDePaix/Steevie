@@ -995,3 +995,22 @@ table.gens td.acts { white-space: nowrap; }
 .mini-btn:disabled { opacity: .5; cursor: default; }
 .mini-btn.spam.actif { background: #FBF2D8; border-color: #D9A31E; color: #9A5B00; }
 table.gens tr.en-spam td.qui strong::after { content: ' · spam'; font: 500 11px var(--mono); color: #9A5B00; }
+
+
+/* Paris fermés : le ticket devient la page d'accueil */
+.fin { margin-bottom: 18px; }
+.fin p { margin: 0 0 10px; }
+.fin-suite { margin-top: 22px; }
+.fin-suite .lots { margin-bottom: 8px; }
+
+
+/* Pronos des autres : l'en-tête fille / garçon */
+.tendance { margin: 4px 0 18px; }
+.tendance-barre { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--rule); }
+.tendance-barre i { display: block; height: 100%; }
+.tendance-barre .f { background: var(--fille); }
+.tendance-barre .g { background: var(--garcon); }
+.tendance-chiffres { display: flex; justify-content: space-between; margin: 6px 0 0; font: 500 13px var(--mono); }
+.tendance-chiffres .f { color: var(--fille); }
+.tendance-chiffres .g { color: var(--garcon); }
+.tendance-fun { margin: 10px 0 0; font-size: 15px; }
