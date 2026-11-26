@@ -410,7 +410,7 @@ function envoyerTous(force) {
    ============================================================================ */
 
 function dessinerPhotos() {
-  ['bebe', 'famille'].forEach(function (slot) {
+  ['bebe', 'famille', 'tignasse'].forEach(function (slot) {
     var src = ETAT.photos && ETAT.photos[slot];
     $('cadre-' + slot).innerHTML = src ? '<img src="' + src + '" alt="">' : 'Pas encore de photo';
     show('suppr-' + slot, !!src);

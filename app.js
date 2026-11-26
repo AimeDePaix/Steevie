@@ -145,10 +145,8 @@ var LOTS = [
     defaut: 'L\'empreinte du pied de Steevie, dédicacée' },
   { cle: 'lot_eleve', titre: 'Prix du bon élève', pour: 'au plus de bonnes réponses, hors podium',
     defaut: 'Une paire de chaussettes à la tête de Steevie' },
-  { cle: 'lot_patate', titre: 'Prix de la pomme de terre', pour: 'au plus de mauvaises réponses',
-    defaut: 'Une vraie pomme de terre, dédicacée d\'une empreinte de pied' },
-  { cle: 'lot_dernier', titre: 'Lanterne rouge', pour: 'au dernier du classement',
-    defaut: 'Une soirée de babysitting, offerte par les parents : tu gardes Steevie, nous on sort' }
+  { cle: 'lot_patate', titre: 'Prix de la pomme de terre', pour: 'à tous ceux qui finissent à 0 point',
+    defaut: 'Une vraie pomme de terre, dédicacée d\'une empreinte de pied' }
 ];
 
 function construireLots() {
